@@ -1,7 +1,7 @@
 # Changelog
 
 ## [1.0.2] - 2025-11-24
-**47** commits in this release
+**49** commits in this release
 
 
 
@@ -12,6 +12,8 @@
 
 ### 📝 Other Changes
 
+- Update sync workflow to preserve original author attribution (6619b90)
+- Karthikeyan R ()
 - Trigger sync to new public repo (73b3155)
 - Update project templates with critical documentation learnings (91a5076)
 - Karthikeyan R ()
