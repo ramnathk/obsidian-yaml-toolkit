@@ -7,5 +7,5 @@
 
 ### 🐛 Bug Fixes
 
-- Remove CHANGELOG.md requirement from release creation (1408064)
+- Use force flag when syncing tags to public repo (5da93be)
 
