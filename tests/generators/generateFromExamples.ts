@@ -9,6 +9,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,6 +81,55 @@ function parseExamplesFile(): Example[] {
       }
     }
 
+    // Determine expected status from context
+    let expectedStatus: 'success' | 'warning' | 'error' | 'skipped' = 'success';
+
+    // Check for "NO CHANGE" in output or notes
+    if (outputYaml.includes('NO CHANGE') || exampleTitle.toLowerCase().includes('no change')) {
+      expectedStatus = 'skipped';
+    }
+
+    // Check for warning indicators in title or nearby text
+    if (exampleTitle.toLowerCase().includes('warning') || exampleTitle.toLowerCase().includes('no change + warning')) {
+      expectedStatus = 'warning';
+    }
+
+    // Check for error indicators (but not "no error" or "silent")
+    if ((exampleTitle.toLowerCase().includes('error') || exampleTitle.toLowerCase().includes('(error)')) &&
+        !exampleTitle.toLowerCase().includes('no error') &&
+        !exampleTitle.toLowerCase().includes('silent')) {
+      expectedStatus = 'error';
+    }
+
+    // Check for silent/skipped/non-match indicators
+    if (exampleTitle.toLowerCase().includes('non-match') ||
+        exampleTitle.toLowerCase().includes('no match') ||
+        exampleTitle.toLowerCase().includes('empty array')) {
+      // Condition doesn't match - rule skipped
+      expectedStatus = 'skipped';
+    }
+
+    // Operations that warn when value not found (REMOVE, UPDATE_WHERE)
+    if ((exampleTitle.toLowerCase().includes('silent') ||
+         exampleTitle.toLowerCase().includes('non-existent') ||
+         exampleTitle.toLowerCase().includes('no matches')) &&
+        (exampleTitle.toLowerCase().includes('remove') ||
+         exampleTitle.toLowerCase().includes('update_where'))) {
+      expectedStatus = 'warning';
+    }
+
+    // Special case: "silent, no error" means skipped
+    if (exampleTitle.toLowerCase().includes('silent') &&
+        exampleTitle.toLowerCase().includes('no error')) {
+      expectedStatus = 'skipped';
+    }
+
+    // RENAME source doesn't exist → skipped
+    if (exampleTitle.toLowerCase().includes('rename') &&
+        exampleTitle.toLowerCase().includes("doesn't exist")) {
+      expectedStatus = 'skipped';
+    }
+
     // Create example from VitePress format
     examples.push({
       id: exampleId,
@@ -91,7 +141,7 @@ function parseExamplesFile(): Example[] {
         action: action.trim()
       },
       output: outputYaml.trim(),
-      expectedStatus: 'success'
+      expectedStatus
     });
   }
 
@@ -212,6 +262,7 @@ function generateTestFile(categoryTests: CategoryTests): string {
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
+import { executeTestRule, lenientDeepEqual } from '../../helpers/testRuleExecutor';
 
 describe('${category}', () => {
 `;
@@ -234,7 +285,7 @@ function generateTestCase(example: Example): string {
   const outputData = example.output ? yamlToJson(example.output) : null;
 
   return `
-  test('Example ${example.id}: ${escapeString(example.title)}', async () => {
+  test('Example ${example.id}: ${escapeString(example.title)}', () => {
     // Input YAML
     const input = ${inputData};
 
@@ -242,20 +293,17 @@ function generateTestCase(example: Example): string {
     const condition = ${JSON.stringify(example.rule.condition)};
     const action = ${JSON.stringify(example.rule.action)};
 
-    // TODO: Execute rule when ruleEngine is implemented
-    // const result = await executeRule({ condition, action }, input);
+    // Execute rule
+    const result = executeTestRule({ condition, action }, input);
 
     // Expected output
     const expectedOutput = ${outputData};
     const expectedStatus = ${JSON.stringify(example.expectedStatus)};
 
-    // Assertions (will be activated when implementation exists)
-    // expect(result.status).toBe(expectedStatus);
-    ${outputData ? '// expect(result.newData).toEqual(expectedOutput);' : '// expect(result.modified).toBe(false);'}
-    ${example.resultNote ? `// expect(result.${example.expectedStatus === 'error' ? 'error' : 'warning'}).toContain(${JSON.stringify(example.resultNote)});` : ''}
-
-    // Placeholder until rule engine is implemented
-    expect(true).toBe(true);
+    // Assertions
+    expect(result.status).toBe(expectedStatus);
+    ${example.expectedStatus === 'error' ? '// Error case - data unchanged, just verify error occurred' : outputData ? 'expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);' : 'expect(result.modified).toBe(false);'}
+    ${example.resultNote ? `expect(result.${example.expectedStatus === 'error' ? 'error' : 'warning'}).toContain(${JSON.stringify(example.resultNote)});` : ''}
   });
 `;
 }
@@ -263,35 +311,30 @@ function generateTestCase(example: Example): string {
 /**
  * Convert YAML string to JSON string for code generation
  */
-function yamlToJson(yaml: string): string {
+function yamlToJson(yamlString: string): string {
   try {
-    // Simple YAML to JSON conversion for common cases
-    // This is a simplified converter - real parsing happens in gray-matter at runtime
+    // Remove YAML front matter delimiters (---) before parsing
+    let cleanedYaml = yamlString.trim();
+    // Remove leading/trailing --- markers
+    cleanedYaml = cleanedYaml.replace(/^---\s*\n?/gm, '').replace(/\n?---\s*$/gm, '');
 
-    const lines = yaml.split('\n');
-    const obj: any = {};
-    let current = obj;
-    const stack: any[] = [obj];
-    let currentIndent = 0;
+    // Handle empty YAML
+    if (!cleanedYaml || cleanedYaml.length === 0) {
+      return '{}';
+    }
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
+    // Use js-yaml with JSON schema (less aggressive type coercion)
+    // This preserves "1.0" as string instead of converting to number 1
+    const obj = yaml.load(cleanedYaml, { schema: yaml.JSON_SCHEMA });
 
-      // Simple key: value parsing
-      const colonIndex = trimmed.indexOf(':');
-      if (colonIndex > 0) {
-        const key = trimmed.substring(0, colonIndex).trim();
-        const value = trimmed.substring(colonIndex + 1).trim();
-
-        if (value) {
-          current[key] = parseSimpleValue(value);
-        }
-      }
+    // Handle null result (empty YAML)
+    if (obj === null || obj === undefined) {
+      return '{}';
     }
 
     return JSON.stringify(obj, null, 2);
   } catch (e) {
+    console.error('Failed to parse YAML:', yamlString.substring(0, 100), e);
     // Fallback: return empty object
     return '{}';
   }

@@ -40,6 +40,11 @@ export interface Progress {
 
 export type ProgressCallback = (progress: Progress) => void;
 
+export interface BatchOptions {
+	/** If true, preview changes without writing to disk (dry-run) */
+	dryRun?: boolean;
+}
+
 /**
  * Process multiple files with a rule
  *
@@ -47,14 +52,17 @@ export type ProgressCallback = (progress: Progress) => void;
  * @param files - Files to process
  * @param rule - Rule to apply
  * @param progressCallback - Optional callback for progress updates
+ * @param options - Optional batch processing options (dryRun, etc.)
  * @returns BatchResult with all file results
  */
 export async function processBatch(
 	app: App,
 	files: TFile[],
 	rule: Rule,
-	progressCallback?: ProgressCallback
+	progressCallback?: ProgressCallback,
+	options?: BatchOptions
 ): Promise<BatchResult> {
+	const isDryRun = options?.dryRun ?? false;
 	const startTime = Date.now();
 	const results: FileResult[] = [];
 	let backupsCreated = 0;
@@ -63,27 +71,30 @@ export async function processBatch(
 		const file = files[i];
 
 		try {
-			// Execute rule (dry-run)
+			// Execute rule (always dry-run at this stage)
 			const result = await executeRule(app, rule, file);
 			results.push(result);
 
-			// Create backup if modified and backup enabled
-			if (result.modified && rule.options.backup) {
-				try {
-					await createBackup(app, file);
-					backupsCreated++;
-				} catch (backupError) {
-					console.warn(`Failed to create backup for ${file.path}:`, backupError);
+			// SAFETY: Skip writes during dry-run (preview mode)
+			if (!isDryRun) {
+				// Create backup if modified and backup enabled
+				if (result.modified && rule.options.backup) {
+					try {
+						await createBackup(app, file);
+						backupsCreated++;
+					} catch (backupError) {
+						console.warn(`Failed to create backup for ${file.path}:`, backupError);
+					}
 				}
-			}
 
-			// Write changes if modified
-			if (result.modified && result.newData) {
-				const content = await app.vault.read(file);
-				const { content: bodyContent } = await import('../yaml/yamlProcessor').then(m =>
-					m.readFrontmatter(app, file)
-				);
-				await writeFrontmatter(app, file, result.newData, bodyContent);
+				// Write changes if modified
+				if (result.modified && result.newData) {
+					const content = await app.vault.read(file);
+					const { content: bodyContent } = await import('../yaml/yamlProcessor').then(m =>
+						m.readFrontmatter(app, file)
+					);
+					await writeFrontmatter(app, file, result.newData, bodyContent);
+				}
 			}
 
 			// Progress callback

@@ -37,7 +37,7 @@ export default class YamlManipulatorPlugin extends Plugin {
 	}
 
 	registerCommands() {
-		// Command: Open Rule Builder
+		// Command: Open Rule Builder (main user-facing feature)
 		this.addCommand({
 			id: 'open-rule-builder',
 			name: 'Open Rule Builder',
@@ -46,83 +46,6 @@ export default class YamlManipulatorPlugin extends Plugin {
 				new RuleBuilderModalWrapper(this).open();
 			},
 		});
-
-		// Command: Execute a rule manually (for testing)
-		this.addCommand({
-			id: 'execute-rule',
-			name: 'Execute Rule (Test)',
-			callback: async () => {
-				await this.executeTestRule();
-			},
-		});
-
-		// Command: Show frontmatter (kept from iterations 1-3)
-		this.addCommand({
-			id: 'show-frontmatter',
-			name: 'Show Frontmatter',
-			callback: async () => {
-				const file = this.app.workspace.getActiveFile();
-				if (!file) {
-					new Notice('No active file');
-					return;
-				}
-
-				const { readFrontmatter } = await import('./yaml/yamlProcessor');
-				const { data } = await readFrontmatter(this.app, file);
-
-				new Notice(`Frontmatter: ${JSON.stringify(data, null, 2)}`);
-			},
-		});
-	}
-
-	/**
-	 * Execute a test rule on current file or vault
-	 */
-	async executeTestRule() {
-		try {
-			const file = this.app.workspace.getActiveFile();
-			if (!file) {
-				new Notice('No active file');
-				return;
-			}
-
-			// Create test rule: SET test "executed"
-			const rule: Rule = {
-				id: 'test-rule',
-				name: 'Test Rule',
-				condition: '',  // No condition - applies to all
-				action: 'SET test "{{today}}"',
-				scope: { type: 'current' },
-				options: { backup: this.data.settings.defaultBackup },
-				created: new Date().toISOString(),
-			};
-
-			new Notice('Executing test rule...');
-
-			// Execute on current file
-			const { executeRule } = await import('./core/ruleEngine');
-			const result = await executeRule(this.app, rule, file);
-
-			if (result.error) {
-				new Notice(`Error: ${result.error}`);
-				return;
-			}
-
-			if (!result.modified) {
-				new Notice('No changes made');
-				return;
-			}
-
-			// Apply changes
-			const { writeFrontmatter, readFrontmatter } = await import('./yaml/yamlProcessor');
-			const frontmatter = await readFrontmatter(this.app, file);
-			await writeFrontmatter(this.app, file, result.newData, frontmatter.content);
-
-			new Notice(`✅ ${result.changes.join(', ')}`);
-		} catch (error) {
-			console.error('Error executing test rule:', error);
-			new Notice(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		}
 	}
 
 	/**

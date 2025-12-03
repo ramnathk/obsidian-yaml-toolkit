@@ -384,4 +384,139 @@ describe('Condition Parser', () => {
 			});
 		});
 	});
+
+	describe('Quote handling (debugging validation errors)', () => {
+		it('should parse condition with ASCII double quotes', () => {
+			// This is the standard format - should always work
+			const condition = 'status = "draft" AND priority > 5';
+			const ast = parseCondition(condition);
+
+			// Positive assertions
+			expect(ast.type).toBe('boolean');
+			if (ast.type === 'boolean') {
+				expect(ast.operator).toBe('AND');
+				expect(ast.left).toMatchObject({
+					type: 'comparison',
+					left: 'status',
+					operator: '=',
+					right: 'draft',
+				});
+				expect(ast.right).toMatchObject({
+					type: 'comparison',
+					left: 'priority',
+					operator: '>',
+					right: 5,
+				});
+			}
+
+			// Negative assertions - ensure no unexpected properties
+			if (ast.type === 'boolean') {
+				expect(ast.left.type).not.toBe('error');
+				expect(ast.right.type).not.toBe('error');
+				// Ensure the value is the string "draft", not a number or other type
+				if (ast.left.type === 'comparison') {
+					expect(typeof ast.left.right).toBe('string');
+					expect(ast.left.right).not.toContain('"'); // No quotes in parsed value
+				}
+			}
+		});
+
+		it('should parse condition with ASCII single quotes', () => {
+			// Single quotes should also work
+			const condition = "status = 'draft' AND priority > 5";
+			const ast = parseCondition(condition);
+			expect(ast.type).toBe('boolean');
+			if (ast.type === 'boolean') {
+				expect(ast.left).toMatchObject({
+					type: 'comparison',
+					right: 'draft',
+				});
+			}
+		});
+
+		it('should handle mixed quote types in same condition', () => {
+			const condition = 'status = "draft" AND author = \'John\'';
+			const ast = parseCondition(condition);
+			expect(ast.type).toBe('boolean');
+			if (ast.type === 'boolean') {
+				expect(ast.left).toMatchObject({
+					right: 'draft',
+				});
+				expect(ast.right).toMatchObject({
+					right: 'John',
+				});
+			}
+		});
+
+		it('should reject smart quotes (Unicode left double quotation)', () => {
+			// Unicode left double quotation mark: U+201C (code 8220)
+			// Unicode right double quotation mark: U+201D (code 8221)
+			// Note: Must construct programmatically to avoid editor normalization
+			const leftQuote = String.fromCharCode(8220);
+			const rightQuote = String.fromCharCode(8221);
+			const condition = `status = ${leftQuote}draft${rightQuote} AND priority > 5`;
+			expect(() => parseCondition(condition)).toThrow(/Unexpected character|Expected value/);
+		});
+
+		it('should reject smart single quotes (Unicode)', () => {
+			// Unicode left single quotation mark: U+2018 (code 8216)
+			// Unicode right single quotation mark: U+2019 (code 8217)
+			const leftQuote = String.fromCharCode(8216);
+			const rightQuote = String.fromCharCode(8217);
+			const condition = `status = ${leftQuote}draft${rightQuote} AND priority > 5`;
+			expect(() => parseCondition(condition)).toThrow(/Unexpected character|Expected value/);
+		});
+
+		it('should handle escaped quotes inside strings', () => {
+			const condition = 'title = "The \\"Great\\" Gatsby"';
+			const ast = parseCondition(condition);
+			expect(ast).toMatchObject({
+				type: 'comparison',
+				left: 'title',
+				right: 'The "Great" Gatsby',
+			});
+		});
+
+		it('should handle empty string values', () => {
+			const condition = 'status = ""';
+			const ast = parseCondition(condition);
+			expect(ast).toMatchObject({
+				type: 'comparison',
+				left: 'status',
+				right: '',
+			});
+		});
+
+		it('should handle strings with special characters', () => {
+			const condition = 'description = "Status: draft (pending review)"';
+			const ast = parseCondition(condition);
+			expect(ast).toMatchObject({
+				type: 'comparison',
+				right: 'Status: draft (pending review)',
+			});
+		});
+
+		it('should fail with helpful error on unclosed quotes', () => {
+			const condition = 'status = "draft';
+			expect(() => parseCondition(condition)).toThrow(/Unterminated string|Expected closing quote/);
+		});
+
+		it('should fail with helpful error on mismatched quotes', () => {
+			const condition = 'status = "draft\'';
+			expect(() => parseCondition(condition)).toThrow(/Unterminated string|Expected closing quote/);
+		});
+
+		// Test the exact placeholder text from the UI
+		it('should parse placeholder condition from UI', () => {
+			const condition = 'status = "draft" AND priority > 5';
+			const ast = parseCondition(condition);
+			expect(ast.type).toBe('boolean');
+			expect(ast).toMatchObject({
+				type: 'boolean',
+				operator: 'AND',
+				left: { type: 'comparison', left: 'status', operator: '=', right: 'draft' },
+				right: { type: 'comparison', left: 'priority', operator: '>', right: 5 },
+			});
+		});
+	});
 });

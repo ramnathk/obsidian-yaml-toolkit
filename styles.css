@@ -198,11 +198,8 @@
 .yaml-manipulator-modal .error {
 	color: var(--text-error);
 	font-size: var(--font-ui-smaller);
-	margin-top: var(--size-2-2);
-	padding: var(--size-2-2) var(--size-4-2);
-	background: var(--background-modifier-error);
-	border-radius: var(--radius-s);
-	border-left: 3px solid var(--text-error);
+	margin-top: var(--size-4-2);
+	line-height: 1.4;
 }
 
 /* Field groups */

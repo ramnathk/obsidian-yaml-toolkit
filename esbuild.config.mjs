@@ -18,7 +18,9 @@ const context = await esbuild.context({
 	},
 	entryPoints: ["src/main.ts"],
 	bundle: true,
-	plugins: [sveltePlugin()],
+	plugins: [sveltePlugin({
+		compilerOptions: { css: 'injected' }
+	})],
 	external: [
 		"obsidian",
 		"electron",

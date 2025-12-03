@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: 
-// Generated: 2025-11-24T22:13:48.021Z
+// Generated: 2025-12-02T23:06:25.744Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -50,7 +50,7 @@ describe('', () => {
 
     // Rule
     const condition = "created_date < \"2024-01-01\" AND NOT tags contains \"keep\"";
-    const action = "tags += \"archived\", archived_date = TODAY()";
+    const action = "ADD tags \"archived\", archived_date = TODAY()";
 
     // TODO: Execute rule when ruleEngine is implemented
     // const result = await executeRule({ condition, action }, input);
@@ -113,7 +113,7 @@ describe('', () => {
 
     // Rule
     const condition = "tags contains \"old-tag\"";
-    const action = "tags -= \"old-tag\", tags += \"new-tag\"";
+    const action = "REMOVE tags \"old-tag\", ADD tags \"new-tag\"";
 
     // TODO: Execute rule when ruleEngine is implemented
     // const result = await executeRule({ condition, action }, input);
@@ -205,7 +205,7 @@ describe('', () => {
 
     // Rule
     const condition = "priority > 7 AND NOT tags contains \"urgent\"";
-    const action = "tags += \"urgent\"";
+    const action = "ADD tags \"urgent\"";
 
     // TODO: Execute rule when ruleEngine is implemented
     // const result = await executeRule({ condition, action }, input);
@@ -269,7 +269,7 @@ describe('', () => {
 
     // Rule
     const condition = "HAS deadline AND deadline < TODAY() AND status != \"completed\"";
-    const action = "status = \"overdue\", tags += \"urgent\"";
+    const action = "status = \"overdue\", ADD tags \"urgent\"";
 
     // TODO: Execute rule when ruleEngine is implemented
     // const result = await executeRule({ condition, action }, input);
@@ -303,7 +303,7 @@ describe('', () => {
 
     // Rule
     const condition = "(status = \"active\" OR status = \"pending\") AND priority >= 5 AND NOT tags contains \"reviewed\"";
-    const action = "status = \"in-review\", tags += \"reviewed\", review_date = NOW()";
+    const action = "status = \"in-review\", ADD tags \"reviewed\", review_date = NOW()";
 
     // TODO: Execute rule when ruleEngine is implemented
     // const result = await executeRule({ condition, action }, input);
