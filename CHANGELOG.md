@@ -1,7 +1,7 @@
 # Changelog
 
 ## [1.1.1] - 2025-12-03
-**24** commits in this release
+**26** commits in this release
 
 
 
@@ -12,6 +12,8 @@
 
 ### 📝 Other Changes
 
+- Clean up outdated files and update .gitignore (9272599)
+- Karthikeyan R ()
 - ramnathk ()
 - Bump version to 1.1.1 (50f9c7a)
 - ramnathk ()
