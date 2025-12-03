@@ -1,13 +1,17 @@
 # Changelog
 
 ## [1.1.2] - 2025-12-03
-**9** commits in this release
+**12** commits in this release
 
 
 
 ### ✨ Features
 
 - Implement conditional debug logging (227e8b7)
+
+### 🐛 Bug Fixes
+
+- Implement defaultBackup setting functionality (bd261a7)
 
 ### 🔧 Refactoring
 
@@ -23,6 +27,8 @@
 
 ### 📝 Other Changes
 
+-  1 skipped (937) (- Total)
+- Karthikeyan R ()
 - Karthikeyan R ()
 -  1 skipped (All tes)
 - ramnathk ()

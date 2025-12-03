@@ -20,7 +20,7 @@
 	};
 
 	let selectedRuleId = null;
-	let currentRule = createNewRule();
+	let currentRule = createNewRule(plugin.data.settings.defaultBackup);
 	let scopeType = 'vault';
 	let folderPath = '';
 	let condition = '';
@@ -72,7 +72,7 @@
 	}
 
 	function newRule() {
-		currentRule = createNewRule();
+		currentRule = createNewRule(plugin.data.settings.defaultBackup);
 		selectedRuleId = null;
 		scopeType = 'vault';
 		folderPath = '';

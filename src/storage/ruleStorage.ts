@@ -85,15 +85,16 @@ export function generateRuleId(): string {
 
 /**
  * Create new rule with defaults
+ * @param defaultBackup - Default backup setting (defaults to true if not provided)
  */
-export function createNewRule(): Rule {
+export function createNewRule(defaultBackup = true): Rule {
 	return {
 		id: generateRuleId(),
 		name: 'New Rule',
 		condition: '',
 		action: '',
 		scope: { type: 'vault' },
-		options: { backup: true },
+		options: { backup: defaultBackup },
 		created: new Date().toISOString(),
 	};
 }
