@@ -1,7 +1,7 @@
 # Changelog
 
-## [1.1.2] - 2025-12-04
-**17** commits in this release
+## [1.1.3] - 2025-12-04
+**19** commits in this release
 
 
 
@@ -28,6 +28,8 @@
 
 ### 📝 Other Changes
 
+- Bump version to 1.1.3 (8d8b3a7)
+- Karthikeyan R ()
 -  1 skipped (939) (- Total)
 - Karthikeyan R ()
 - Add comprehensive verification command (af20e4b)
