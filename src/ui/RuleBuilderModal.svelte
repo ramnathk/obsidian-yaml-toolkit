@@ -25,7 +25,7 @@
 	let folderPath = '';
 	let condition = '';
 	let action = '';
-	let backup = true;
+	let backup = currentRule.options.backup;  // Initialize from currentRule
 	let conditionError = '';
 	let actionError = '';
 
@@ -78,7 +78,7 @@
 		folderPath = '';
 		condition = '';
 		action = '';
-		backup = true;
+		backup = currentRule.options.backup;  // Reset to match new rule's backup setting
 		conditionError = '';
 		actionError = '';
 	}

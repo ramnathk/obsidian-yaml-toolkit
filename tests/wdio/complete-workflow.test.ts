@@ -233,6 +233,15 @@ describe('Complete Workflow - E2E', () => {
 	});
 
 	describe('Backup Option', () => {
+		it('should have backup checkbox checked by default (respects defaultBackup setting)', async () => {
+			// Find backup checkbox (last checkbox)
+			const checkboxes = await $$('input[type="checkbox"]');
+			const backupCheckbox = checkboxes[checkboxes.length - 1];
+
+			// Verify checkbox is checked by default (defaultBackup setting is true)
+			expect(await backupCheckbox.isSelected()).toBe(true);
+		});
+
 		it('should toggle backup checkbox', async () => {
 			// Find backup checkbox (last checkbox)
 			const checkboxes = await $$('input[type="checkbox"]');

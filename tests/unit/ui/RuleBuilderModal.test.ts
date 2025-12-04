@@ -740,4 +740,78 @@ describe('RuleBuilderModal UI Tests', () => {
 		});
 	});
 
+	describe('Default Backup Setting', () => {
+		it('should create new rule with backup enabled when defaultBackup is true', () => {
+			const pluginWithBackupEnabled = {
+				app: {
+					vault: {
+						getMarkdownFiles: vi.fn().mockReturnValue([]),
+						read: vi.fn().mockResolvedValue('---\ntitle: Test\n---'),
+						adapter: {
+							exists: vi.fn().mockResolvedValue(false),
+							write: vi.fn().mockResolvedValue(undefined),
+						}
+					}
+				},
+				data: {
+					rules: [],
+					settings: {
+						defaultBackup: true,  // Setting enabled
+						scanTimeout: 30000,
+						debug: false
+					}
+				},
+				saveSettings: vi.fn().mockResolvedValue(undefined)
+			};
+
+			const { container } = render(RuleBuilderModal, {
+				props: {
+					plugin: pluginWithBackupEnabled,
+					onClose: vi.fn()
+				}
+			});
+
+			// Verify backup checkbox is checked by default
+			const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+			const backupCheckbox = checkboxes[checkboxes.length - 1] as HTMLInputElement;
+			expect(backupCheckbox.checked).toBe(true);
+		});
+
+		it('should create new rule with backup disabled when defaultBackup is false', () => {
+			const pluginWithBackupDisabled = {
+				app: {
+					vault: {
+						getMarkdownFiles: vi.fn().mockReturnValue([]),
+						read: vi.fn().mockResolvedValue('---\ntitle: Test\n---'),
+						adapter: {
+							exists: vi.fn().mockResolvedValue(false),
+							write: vi.fn().mockResolvedValue(undefined),
+						}
+					}
+				},
+				data: {
+					rules: [],
+					settings: {
+						defaultBackup: false,  // Setting disabled
+						scanTimeout: 30000,
+						debug: false
+					}
+				},
+				saveSettings: vi.fn().mockResolvedValue(undefined)
+			};
+
+			const { container } = render(RuleBuilderModal, {
+				props: {
+					plugin: pluginWithBackupDisabled,
+					onClose: vi.fn()
+				}
+			});
+
+			// Verify backup checkbox is unchecked by default
+			const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+			const backupCheckbox = checkboxes[checkboxes.length - 1] as HTMLInputElement;
+			expect(backupCheckbox.checked).toBe(false);
+		});
+	});
+
 });

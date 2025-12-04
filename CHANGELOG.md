@@ -1,7 +1,7 @@
 # Changelog
 
-## [1.1.2] - 2025-12-03
-**14** commits in this release
+## [1.1.2] - 2025-12-04
+**17** commits in this release
 
 
 
@@ -23,10 +23,13 @@
 
 ### ✅ Tests
 
+- Add component and E2E coverage for defaultBackup setting (7904ee9)
 - Add maxFilesPerBatch functionality tests (e3b2a75)
 
 ### 📝 Other Changes
 
+-  1 skipped (939) (- Total)
+- Karthikeyan R ()
 - Add comprehensive verification command (af20e4b)
 - ramnathk ()
 -  1 skipped (937) (- Total)
