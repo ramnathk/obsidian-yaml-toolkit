@@ -2,7 +2,7 @@
 
 /* Modal overrides */
 .modal.yaml-rule-builder-modal {
-	width: 700px;
+	width: 800px;
 	max-width: 90vw;
 }
 
@@ -55,16 +55,16 @@
 
 /* Fix for select element - ensure proper height and vertical alignment */
 .yaml-manipulator-modal select {
-	padding: 8px var(--size-4-3);
-	line-height: normal;
+	padding: 10px var(--size-4-3);
+	line-height: 1.6;
 	height: auto;
-	min-height: 36px;
+	min-height: 40px;
 }
 
 /* Select dropdown options */
 .yaml-manipulator-modal select option {
-	padding: 8px 12px;
-	line-height: normal;
+	padding: 10px 12px;
+	line-height: 1.6;
 }
 
 .yaml-manipulator-modal input[type="text"]:focus,
@@ -102,12 +102,22 @@
 
 .yaml-manipulator-modal .rule-selector select {
 	flex: 1;
-	min-width: 250px;
+	min-width: 350px;
 	margin: 0;
-	padding: 8px var(--size-4-3);
-	line-height: normal;
+	padding: 10px var(--size-4-3);
+	line-height: 1.6;
 	height: auto;
-	min-height: 36px;
+	min-height: 40px;
+	/* Ensure text isn't clipped */
+	overflow: visible;
+	text-overflow: clip;
+	white-space: nowrap;
+}
+
+/* Ensure rule selector options also have proper spacing */
+.yaml-manipulator-modal .rule-selector select option {
+	padding: 10px 12px;
+	line-height: 1.6;
 }
 
 .yaml-manipulator-modal .rule-selector button {
