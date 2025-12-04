@@ -53,6 +53,20 @@
 	transition: border-color 0.1s ease;
 }
 
+/* Fix for select element - ensure proper height and vertical alignment */
+.yaml-manipulator-modal select {
+	padding: 8px var(--size-4-3);
+	line-height: normal;
+	height: auto;
+	min-height: 36px;
+}
+
+/* Select dropdown options */
+.yaml-manipulator-modal select option {
+	padding: 8px 12px;
+	line-height: normal;
+}
+
 .yaml-manipulator-modal input[type="text"]:focus,
 .yaml-manipulator-modal textarea:focus,
 .yaml-manipulator-modal select:focus {
@@ -90,6 +104,10 @@
 	flex: 1;
 	min-width: 250px;
 	margin: 0;
+	padding: 8px var(--size-4-3);
+	line-height: normal;
+	height: auto;
+	min-height: 36px;
 }
 
 .yaml-manipulator-modal .rule-selector button {

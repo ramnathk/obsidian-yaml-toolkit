@@ -8,6 +8,10 @@
 	import { parseAction } from '../parser/actionParser';
 	import PreviewTab from './components/PreviewTab.svelte';
 	import TestTab from './components/TestTab.svelte';
+	import { t$ } from '../i18n';
+
+	// Use $t for Svelte reactive translations
+	$: t = $t$;
 
 	export let plugin;
 	export let onClose;
@@ -86,7 +90,7 @@
 	async function save() {
 		if (!validate()) return;
 
-		currentRule.name = currentRule.name || 'Unnamed Rule';
+		currentRule.name = currentRule.name || t('ruleBuilder.fields.ruleName.default');
 		currentRule.scope = {
 			type: scopeType,
 			folder: scopeType === 'folder' ? folderPath : undefined,
@@ -99,7 +103,7 @@
 		await plugin.saveSettings();
 		selectedRuleId = currentRule.id;
 
-		new Notice('Rule saved successfully');
+		new Notice(t('notices.ruleSaved'));
 	}
 
 	async function deleteCurrentRule() {
@@ -108,7 +112,7 @@
 		await plugin.saveSettings();
 		newRule();
 
-		new Notice('Rule deleted');
+		new Notice(t('notices.ruleDeleted'));
 	}
 
 	function validate() {
@@ -119,14 +123,14 @@
 			try {
 				parseCondition(condition);
 			} catch (e) {
-				conditionError = e instanceof Error ? e.message : 'Invalid condition';
+				conditionError = e instanceof Error ? e.message : t('ruleBuilder.validation.invalidCondition');
 				debugLog('Condition error:', conditionError);
 				return false;
 			}
 		}
 
 		if (!action.trim()) {
-			actionError = 'Action is required';
+			actionError = t('ruleBuilder.fields.action.required');
 			debugLog('Action error:', actionError);
 			return false;
 		}
@@ -134,13 +138,13 @@
 		try {
 			parseAction(action);
 		} catch (e) {
-			actionError = e instanceof Error ? e.message : 'Invalid action';
+			actionError = e instanceof Error ? e.message : t('ruleBuilder.validation.invalidAction');
 			debugLog('Action error:', actionError);
 			return false;
 		}
 
 		debugLog('Validation passed');
-		new Notice('✓ Validation passed - rule is valid');
+		new Notice(t('ruleBuilder.validation.passed'));
 		return true;
 	}
 
@@ -202,9 +206,9 @@
 		// Smart warning: show if user hasn't previewed
 		if (!hasPreviewedRule) {
 				const confirmed = confirm(
-				'⚠️ You haven\'t previewed this rule yet.\n\n' +
-				'It\'s recommended to preview before applying to see what changes will be made.\n\n' +
-				'Continue anyway?'
+				t('confirm.applyWithoutPreview.title') + '\n\n' +
+				t('confirm.applyWithoutPreview.message') + '\n\n' +
+				t('confirm.applyWithoutPreview.question')
 			);
 			if (!confirmed) return;
 		}
@@ -227,16 +231,20 @@
 			);
 
 			if (scanResult.matched.length === 0) {
-						new Notice('No files matched the scope');
+						new Notice(t('notices.noFilesMatched'));
 				return;
 			}
 
-				new Notice(`Processing ${scanResult.matched.length} file(s)...`);
+				new Notice(t('notices.processing', { count: scanResult.matched.length }));
 
 			// SAFETY: No dryRun option means writes will happen
 			const result = await processBatch(plugin.app, scanResult.matched, rule);
 
-			const msg = `✅ Complete: ${result.summary.success} success, ${result.summary.warnings} warnings, ${result.summary.errors} errors`;
+			const msg = t('notices.complete', {
+				success: result.summary.success,
+				warnings: result.summary.warnings,
+				errors: result.summary.errors
+			});
 			new Notice(msg, 5000);
 
 			if (selectedRuleId) {
@@ -247,7 +255,7 @@
 			// Reset preview flag after successful apply
 			hasPreviewedRule = false;
 		} catch (error) {
-				new Notice(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+				new Notice(t('notices.error', { message: error instanceof Error ? error.message : 'Unknown error' }));
 		}
 	}
 
@@ -290,55 +298,58 @@
 </script>
 
 <div class="yaml-manipulator-modal">
-	<h2>YAML Rule Builder</h2>
+	<h2>{t('ruleBuilder.title')}</h2>
 
 	<div class="modal-content">
 		<div class="rule-selector">
-			<label for="saved-rules-select">Saved Rules:</label>
+			<label for="saved-rules-select">{t('ruleBuilder.savedRules.label')}</label>
 			<select id="saved-rules-select" bind:value={selectedRuleId} on:change={() => selectedRuleId && loadRule(selectedRuleId)}>
-				<option value={null}>-- New Rule --</option>
+				<option value={null}>{t('ruleBuilder.savedRules.newRule')}</option>
 				{#each savedRules as rule (rule.id)}
 					<option value={rule.id}>{rule.name}</option>
 				{/each}
 			</select>
-			<button on:click={newRule}>New</button>
+			<button on:click={newRule}>{t('ruleBuilder.buttons.new')}</button>
 			{#if selectedRuleId}
-				<button on:click={deleteCurrentRule} class="danger">Delete</button>
+				<button on:click={deleteCurrentRule} class="danger">{t('ruleBuilder.buttons.delete')}</button>
 			{/if}
 		</div>
 
 		<div class="field">
-			<label for="rule-name">Rule Name:</label>
-			<input id="rule-name" type="text" bind:value={currentRule.name} placeholder="My Rule" />
+			<label for="rule-name">{t('ruleBuilder.fields.ruleName.label')}</label>
+			<input id="rule-name" type="text" bind:value={currentRule.name} placeholder={t('ruleBuilder.fields.ruleName.placeholder')} />
 		</div>
 
 		<fieldset class="field">
-			<legend>Scope:</legend>
+			<legend>{t('ruleBuilder.fields.scope.legend')}</legend>
 			<div class="radio-group">
 				<label>
 					<input type="radio" bind:group={scopeType} value="vault" />
-					Entire Vault
+					{t('ruleBuilder.fields.scope.vault')}
 				</label>
 				<label>
 					<input type="radio" bind:group={scopeType} value="folder" />
-					Folder
+					{t('ruleBuilder.fields.scope.folder')}
 				</label>
 				<label>
 					<input type="radio" bind:group={scopeType} value="current" />
-					Current File
+					{t('ruleBuilder.fields.scope.current')}
 				</label>
 			</div>
 			{#if scopeType === 'folder'}
-				<input type="text" bind:value={folderPath} placeholder="folder/path" />
+				<input type="text" bind:value={folderPath} placeholder={t('ruleBuilder.fields.scope.folderPlaceholder')} />
 			{/if}
 		</fieldset>
 
 		<div class="field">
-			<label for="condition">Condition (optional):</label>
+			<label for="condition">
+				{t('ruleBuilder.fields.condition.label')}
+				<span class="help-icon" title={t('ruleBuilder.fields.condition.helpText')}>ℹ️</span>
+			</label>
 			<textarea
 				id="condition"
 				bind:value={condition}
-				placeholder='status = "draft" AND priority > 5'
+				placeholder={t('ruleBuilder.fields.condition.placeholder')}
 				rows="3"
 			></textarea>
 			{#if conditionError}
@@ -347,11 +358,11 @@
 		</div>
 
 		<div class="field">
-			<label for="action">Action (required):</label>
+			<label for="action">{t('ruleBuilder.fields.action.label')}</label>
 			<textarea
 				id="action"
 				bind:value={action}
-				placeholder='SET status "published"'
+				placeholder={t('ruleBuilder.fields.action.placeholder')}
 				rows="3"
 			></textarea>
 			{#if actionError}
@@ -362,19 +373,19 @@
 		<div class="field">
 			<label>
 				<input type="checkbox" bind:checked={backup} />
-				Create backups before modifying
+				{t('ruleBuilder.fields.backup.label')}
 			</label>
 		</div>
 
 		<div class="button-group">
 			<div class="left-buttons">
-				<button on:click={onClose}>Cancel</button>
+				<button on:click={onClose}>{t('ruleBuilder.buttons.cancel')}</button>
 			</div>
 			<div class="right-buttons">
-				<button on:click={save}>Save Rule</button>
-				<button on:click={validate} class="secondary">Validate</button>
-				<button on:click={preview} class="secondary">Preview</button>
-				<button on:click={apply} class="cta">Apply</button>
+				<button on:click={save}>{t('ruleBuilder.buttons.save')}</button>
+				<button on:click={validate} class="secondary">{t('ruleBuilder.buttons.validate')}</button>
+				<button on:click={preview} class="secondary">{t('ruleBuilder.buttons.preview')}</button>
+				<button on:click={apply} class="cta">{t('ruleBuilder.buttons.apply')}</button>
 			</div>
 		</div>
 
@@ -386,19 +397,19 @@
 							class="tab-btn {activeTab === 'preview' ? 'active' : ''}"
 							on:click={() => activeTab = 'preview'}
 						>
-							Preview Files
+							{t('ruleBuilder.tabs.preview')}
 						</button>
 						<button
 							class="tab-btn {activeTab === 'test' ? 'active' : ''}"
 							on:click={() => activeTab = 'test'}
 						>
-							Test Sample
+							{t('ruleBuilder.tabs.test')}
 						</button>
 					</div>
 					<button
 						class="close-validation"
 						on:click={() => showValidationSection = false}
-						title="Close validation panel"
+						title={t('ruleBuilder.closeValidation')}
 					>
 						✕
 					</button>
@@ -497,5 +508,21 @@
 		max-height: 500px;
 		overflow-y: auto;
 		background: var(--background-primary);
+	}
+
+	/* Help icon styling */
+	.help-icon {
+		display: inline-block;
+		margin-left: var(--size-4-1);
+		cursor: help;
+		color: var(--text-muted);
+		font-size: var(--font-ui-small);
+		opacity: 0.7;
+		transition: opacity 0.2s;
+	}
+
+	.help-icon:hover {
+		opacity: 1;
+		color: var(--interactive-accent);
 	}
 </style>

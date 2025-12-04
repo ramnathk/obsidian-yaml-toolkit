@@ -4,9 +4,15 @@
  */
 
 import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import RuleBuilderModal from '../../../src/ui/RuleBuilderModal.svelte';
 import type { TFile } from 'obsidian';
+import { initI18n } from '../../../src/i18n';
+
+// Initialize i18n before all tests
+beforeAll(() => {
+	initI18n();
+});
 
 // Mock the async functions
 vi.mock('../../../src/core/fileScanner', () => ({
@@ -129,7 +135,7 @@ describe('RuleBuilderModal UI Tests', () => {
 			// Check for main elements
 			expect(screen.getByText('YAML Rule Builder')).toBeInTheDocument();
 			expect(screen.getByLabelText(/Rule Name/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Condition/i)).toBeInTheDocument();
+			expect(screen.getByLabelText(/Find files based on frontmatter/i)).toBeInTheDocument();
 			expect(screen.getByLabelText(/Action/i)).toBeInTheDocument();
 			expect(screen.getByText(/Create backups/i)).toBeInTheDocument();
 		});
@@ -172,7 +178,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			const conditionInput = screen.getByLabelText(/Condition/i);
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
 			const validateBtn = screen.getByRole('button', { name: /Validate/i });
 
 			// Enter invalid condition
@@ -244,7 +250,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			const conditionInput = screen.getByLabelText(/Condition/i);
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
 			const actionInput = screen.getByLabelText(/Action/i);
 			const validateBtn = screen.getByRole('button', { name: /Validate/i });
 
@@ -273,7 +279,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			const conditionInput = screen.getByLabelText(/Condition/i);
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
 			const actionInput = screen.getByLabelText(/Action/i);
 			const previewBtn = screen.getByRole('button', { name: /Preview/i });
 
@@ -310,7 +316,7 @@ describe('RuleBuilderModal UI Tests', () => {
 			});
 
 			// Fill and preview
-			await fireEvent.input(screen.getByLabelText(/Condition/i), {
+			await fireEvent.input(screen.getByLabelText(/Find files based on frontmatter/i), {
 				target: { value: 'status = "draft"' }
 			});
 			await fireEvent.input(screen.getByLabelText(/Action/i), {
@@ -347,7 +353,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			const conditionInput = screen.getByLabelText(/Condition/i);
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
 			const actionInput = screen.getByLabelText(/Action/i);
 			const previewBtn = screen.getByRole('button', { name: /Preview/i });
 			const applyBtn = screen.getByRole('button', { name: /Apply/i });
@@ -388,7 +394,7 @@ describe('RuleBuilderModal UI Tests', () => {
 			});
 
 			// Open preview
-			await fireEvent.input(screen.getByLabelText(/Condition/i), {
+			await fireEvent.input(screen.getByLabelText(/Find files based on frontmatter/i), {
 				target: { value: 'status = "draft"' }
 			});
 			await fireEvent.input(screen.getByLabelText(/Action/i), {
@@ -420,7 +426,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			const conditionInput = screen.getByLabelText(/Condition/i);
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
 			const actionInput = screen.getByLabelText(/Action/i);
 			const applyBtn = screen.getByRole('button', { name: /Apply/i });
 
@@ -449,7 +455,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			const conditionInput = screen.getByLabelText(/Condition/i);
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
 			const actionInput = screen.getByLabelText(/Action/i);
 			const previewBtn = screen.getByRole('button', { name: /Preview/i });
 			const applyBtn = screen.getByRole('button', { name: /Apply/i });
@@ -499,7 +505,7 @@ describe('RuleBuilderModal UI Tests', () => {
 				}
 			});
 
-			await fireEvent.input(screen.getByLabelText(/Condition/i), {
+			await fireEvent.input(screen.getByLabelText(/Find files based on frontmatter/i), {
 				target: { value: 'status = "draft"' }
 			});
 			await fireEvent.input(screen.getByLabelText(/Action/i), {
@@ -642,7 +648,7 @@ describe('RuleBuilderModal UI Tests', () => {
 
 			// Check that form is populated with rule data
 			await waitFor(() => {
-				const conditionInput = screen.getByLabelText(/Condition/i) as HTMLTextAreaElement;
+				const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i) as HTMLTextAreaElement;
 				const actionInput = screen.getByLabelText(/Action/i) as HTMLTextAreaElement;
 				expect(conditionInput.value).toBe('status = "draft"');
 				expect(actionInput.value).toBe('SET status "published"');
@@ -660,7 +666,7 @@ describe('RuleBuilderModal UI Tests', () => {
 			await fireEvent.input(screen.getByLabelText(/Rule Name/i), {
 				target: { value: 'Test Rule' }
 			});
-			await fireEvent.input(screen.getByLabelText(/Condition/i), {
+			await fireEvent.input(screen.getByLabelText(/Find files based on frontmatter/i), {
 				target: { value: 'status = "draft"' }
 			});
 			await fireEvent.input(screen.getByLabelText(/Action/i), {

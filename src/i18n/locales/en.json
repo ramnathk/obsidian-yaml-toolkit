@@ -1,0 +1,165 @@
+{
+  "plugin": {
+    "name": "YAML Manipulator",
+    "loading": "Loading YAML Manipulator plugin"
+  },
+  "commands": {
+    "openRuleBuilder": "Open Rule Builder"
+  },
+  "settings": {
+    "title": "YAML Manipulator Settings",
+    "defaultBackup": {
+      "name": "Default Backup",
+      "description": "Create backup files (.bak) before making changes"
+    },
+    "debugMode": {
+      "name": "Debug Mode",
+      "description": "Show debug information in console"
+    }
+  },
+  "ruleBuilder": {
+    "title": "YAML Rule Builder",
+    "savedRules": {
+      "label": "Saved Rules:",
+      "newRule": "-- New Rule --"
+    },
+    "buttons": {
+      "new": "New",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save Rule",
+      "validate": "Validate",
+      "preview": "Preview",
+      "apply": "Apply",
+      "test": "Test Rule",
+      "testing": "Testing..."
+    },
+    "fields": {
+      "ruleName": {
+        "label": "Rule Name:",
+        "placeholder": "My Rule",
+        "default": "Unnamed Rule"
+      },
+      "scope": {
+        "legend": "Scope:",
+        "vault": "Entire Vault",
+        "folder": "Folder",
+        "current": "Current File",
+        "folderPlaceholder": "folder/path"
+      },
+      "condition": {
+        "label": "Find files based on frontmatter (optional):",
+        "helpText": "This condition determines which files will be processed. Only files whose frontmatter matches this condition will be modified. Leave empty to process all files in scope.",
+        "placeholder": "status = \"draft\" AND priority > 5"
+      },
+      "action": {
+        "label": "Action (required):",
+        "placeholder": "SET status \"published\"",
+        "required": "Action is required"
+      },
+      "backup": {
+        "label": "Create backups before modifying"
+      }
+    },
+    "validation": {
+      "passed": "✓ Validation passed - rule is valid",
+      "invalidCondition": "Invalid condition",
+      "invalidAction": "Invalid action"
+    },
+    "tabs": {
+      "preview": "Preview Files",
+      "test": "Test Sample"
+    },
+    "closeValidation": "Close validation panel"
+  },
+  "preview": {
+    "loading": "Scanning files and previewing changes...",
+    "failed": "Preview Failed",
+    "empty": {
+      "title": "No markdown files found in the selected scope.",
+      "message": "Try selecting a different folder or check your file filters."
+    },
+    "summary": {
+      "title": "Summary",
+      "matched": "matched",
+      "warning": "warning",
+      "warnings": "warnings",
+      "error": "error",
+      "errors": "errors",
+      "skipped": "skipped"
+    },
+    "fileDetails": {
+      "error": "Error:",
+      "reason": "Reason:",
+      "conditionNotMatch": "Condition did not match",
+      "noChanges": "No changes to display",
+      "unknownError": "Unknown error"
+    },
+    "note": {
+      "text": "These are preview results only. No files have been modified. Click",
+      "action": "Apply",
+      "continuation": "to write these changes to disk."
+    }
+  },
+  "test": {
+    "instructions": "Test your rule against sample YAML without modifying any files in your vault. Enter YAML frontmatter below or load an example.",
+    "examples": {
+      "draftNote": "Draft Note",
+      "publishedNote": "Published Note",
+      "minimalNote": "Minimal Note",
+      "complexNote": "Complex Note"
+    },
+    "sampleYaml": {
+      "label": "Sample YAML:",
+      "placeholder": "title: My Note\nstatus: draft\npriority: 5\ntags:\n  - work"
+    },
+    "result": {
+      "error": "Error:",
+      "conditionNotMatch": "Condition did not match",
+      "conditionEvaluationMessage": "The condition evaluated to false for this sample.",
+      "match": "Match:",
+      "matched": "✓ Condition matched",
+      "warning": "Warning:",
+      "noChanges": "No changes needed - values already match target.",
+      "note": "This test ran entirely in-memory. No vault files were accessed or modified."
+    },
+    "yamlError": {
+      "parse": "YAML parse error:",
+      "invalid": "Invalid YAML"
+    },
+    "executionError": {
+      "prefix": "Rule execution error:",
+      "unknown": "Unknown error"
+    }
+  },
+  "diff": {
+    "headers": {
+      "before": "Before",
+      "after": "After"
+    },
+    "changes": {
+      "title": "Changes:"
+    }
+  },
+  "notices": {
+    "ruleSaved": "Rule saved successfully",
+    "ruleDeleted": "Rule deleted",
+    "noFilesMatched": "No files matched the scope",
+    "processing": "Processing {count} file(s)...",
+    "complete": "✅ Complete: {success} success, {warnings} warnings, {errors} errors",
+    "error": "Error: {message}"
+  },
+  "confirm": {
+    "applyWithoutPreview": {
+      "title": "⚠️ You haven't previewed this rule yet.",
+      "message": "It's recommended to preview before applying to see what changes will be made.",
+      "question": "Continue anyway?"
+    }
+  },
+  "status": {
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error",
+    "skipped": "Skipped"
+  }
+}

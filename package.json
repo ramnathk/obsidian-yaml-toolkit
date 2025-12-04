@@ -43,7 +43,8 @@
 		"diff": "^8.0.2",
 		"gray-matter": "^4.0.3",
 		"js-yaml": "^4.1.1",
-		"luxon": "^3.4.4"
+		"luxon": "^3.4.4",
+		"svelte-i18n": "^4.0.1"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",

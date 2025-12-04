@@ -10,6 +10,7 @@ import { loadPluginData, savePluginData, saveRule, deleteRule, createNewRule, up
 import { scanFiles } from './core/fileScanner';
 import { processBatch } from './core/batchProcessor';
 import { createLogger, generateLogPath } from './core/logger';
+import { initI18n, t } from './i18n';
 
 /**
  * Main plugin class
@@ -25,8 +26,11 @@ export default class YamlManipulatorPlugin extends Plugin {
 	}
 
 	async onload() {
+		// Initialize i18n system
+		initI18n();
+
 		// Always log loading (before settings are loaded)
-		console.log('Loading YAML Manipulator plugin');
+		console.log(t('plugin.loading'));
 
 		// Load plugin data
 		this.data = await loadPluginData(this);
@@ -48,7 +52,7 @@ export default class YamlManipulatorPlugin extends Plugin {
 		// Command: Open Rule Builder (main user-facing feature)
 		this.addCommand({
 			id: 'open-rule-builder',
-			name: 'Open Rule Builder',
+			name: t('commands.openRuleBuilder'),
 			callback: async () => {
 				const { RuleBuilderModalWrapper } = await import('./ui/RuleBuilderModalWrapper');
 				new RuleBuilderModalWrapper(this).open();
@@ -79,11 +83,11 @@ class YamlManipulatorSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'YAML Manipulator Settings' });
+		containerEl.createEl('h2', { text: t('settings.title') });
 
 		new Setting(containerEl)
-			.setName('Default Backup')
-			.setDesc('Create backup files (.bak) before making changes')
+			.setName(t('settings.defaultBackup.name'))
+			.setDesc(t('settings.defaultBackup.description'))
 			.addToggle(toggle =>
 				toggle
 					.setValue(this.plugin.data.settings.defaultBackup)
@@ -94,8 +98,8 @@ class YamlManipulatorSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Debug Mode')
-			.setDesc('Show debug information in console')
+			.setName(t('settings.debugMode.name'))
+			.setDesc(t('settings.debugMode.description'))
 			.addToggle(toggle =>
 				toggle
 					.setValue(this.plugin.data.settings.debug)

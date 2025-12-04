@@ -4,6 +4,14 @@
  */
 
 /**
+ * Global screenshot tracking functions
+ * Defined in wdio.conf.js and made available globally
+ */
+declare global {
+	var trackScreenshot: (filepath: string) => void;
+}
+
+/**
  * Open Obsidian command palette
  */
 export async function openCommandPalette() {
@@ -75,9 +83,16 @@ export async function waitForNoticeToDisappear(timeout: number = 5000) {
 
 /**
  * Take screenshot with descriptive name
+ * Automatically tracks screenshots per test for cleanup
  */
 export async function screenshot(name: string) {
-	await browser.saveScreenshot(`./test-results/${name}.png`);
+	const filepath = `./test-results/${name}.png`;
+	await browser.saveScreenshot(filepath);
+
+	// Track screenshot for current test (uses global function from wdio.conf.js)
+	if (typeof global.trackScreenshot === 'function') {
+		global.trackScreenshot(filepath);
+	}
 }
 
 /**
