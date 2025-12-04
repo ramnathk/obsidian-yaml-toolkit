@@ -4,11 +4,36 @@
  */
 
 /**
- * Global screenshot tracking functions
- * Defined in wdio.conf.js and made available globally
+ * Screenshot tracking for automatic cleanup
+ * Maps test names to their screenshot file paths
  */
-declare global {
-	var trackScreenshot: (filepath: string) => void;
+const testScreenshots = new Map<string, string[]>();
+let currentTestName: string | null = null;
+
+/**
+ * Set the current test name for screenshot tracking
+ * Called by wdio.conf.js beforeTest hook
+ */
+export function setCurrentTest(testName: string) {
+	currentTestName = testName;
+	if (!testScreenshots.has(testName)) {
+		testScreenshots.set(testName, []);
+	}
+}
+
+/**
+ * Get all screenshots for a specific test
+ */
+export function getTestScreenshots(testName: string): string[] {
+	return testScreenshots.get(testName) || [];
+}
+
+/**
+ * Clear screenshots tracking for a test
+ * Called by wdio.conf.js afterTest hook
+ */
+export function clearTestScreenshots(testName: string) {
+	testScreenshots.delete(testName);
 }
 
 /**
@@ -89,9 +114,11 @@ export async function screenshot(name: string) {
 	const filepath = `./test-results/${name}.png`;
 	await browser.saveScreenshot(filepath);
 
-	// Track screenshot for current test (uses global function from wdio.conf.js)
-	if (typeof global.trackScreenshot === 'function') {
-		global.trackScreenshot(filepath);
+	// Track screenshot for current test
+	if (currentTestName) {
+		const screenshots = testScreenshots.get(currentTestName) || [];
+		screenshots.push(filepath);
+		testScreenshots.set(currentTestName, screenshots);
 	}
 }
 
