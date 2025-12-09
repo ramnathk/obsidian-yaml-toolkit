@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Array Operations
-// Generated: 2025-12-03T21:00:40.148Z
+// Generated: 2025-12-06T16:22:50.457Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -8,7 +8,7 @@ import { executeTestRule, lenientDeepEqual } from '../../helpers/testRuleExecuto
 
 describe('Array Operations', () => {
 
-  test('Example 24: APPEND to existing array', () => {
+  test('Example 24: FOR to APPEND existing array', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -19,7 +19,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "APPEND tags \"urgent\"";
+    const action = "FOR tags APPEND \"urgent\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -40,7 +40,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 25: APPEND creates array if field missing', () => {
+  test('Example 25: FOR creates APPEND array if field missing', () => {
     // Input YAML
     const input = {
   "title": "Note"
@@ -48,7 +48,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "APPEND tags \"new\"";
+    const action = "FOR tags APPEND \"new\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -68,7 +68,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 26: APPEND to non-array (error)', () => {
+  test('Example 26: FOR to APPEND non-array (error)', () => {
     // Input YAML
     const input = {
   "status": "draft"
@@ -76,7 +76,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "APPEND status \"test\"";
+    const action = "FOR status APPEND \"test\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -91,7 +91,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 27: PREPEND to array', () => {
+  test('Example 27: FOR to PREPEND array', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -102,7 +102,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "PREPEND tags \"urgent\"";
+    const action = "FOR tags PREPEND \"urgent\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -123,7 +123,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 28: REMOVE matching value', () => {
+  test('Example 28: FOR matching REMOVE value', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -136,7 +136,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "REMOVE tags \"urgent\"";
+    const action = "FOR tags REMOVE \"urgent\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -168,39 +168,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "REMOVE tags \"urgent\"";
-
-    // Execute rule
-    const result = executeTestRule({ condition, action }, input);
-
-    // Expected output
-    const expectedOutput = {
-  "tags": [
-    "work",
-    "project"
-  ]
-};
-    const expectedStatus = "warning";
-
-    // Assertions
-    expect(result.status).toBe(expectedStatus);
-    expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
-    
-  });
-
-  test('Example 30: REMOVE_AT specific index', () => {
-    // Input YAML
-    const input = {
-  "tags": [
-    "work",
-    "urgent",
-    "project"
-  ]
-};
-
-    // Rule
-    const condition = "";
-    const action = "REMOVE_AT tags 1";
+    const action = "FOR tags REMOVE \"urgent\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -220,7 +188,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 31: REMOVE_AT negative index', () => {
+  test('Example 30: FOR specific REMOVE_AT index', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -232,7 +200,39 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "REMOVE_AT tags -1";
+    const action = "FOR tags REMOVE_AT 1";
+
+    // Execute rule
+    const result = executeTestRule({ condition, action }, input);
+
+    // Expected output
+    const expectedOutput = {
+  "tags": [
+    "work",
+    "project"
+  ]
+};
+    const expectedStatus = "success";
+
+    // Assertions
+    expect(result.status).toBe(expectedStatus);
+    expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
+    
+  });
+
+  test('Example 31: FOR negative REMOVE_AT index', () => {
+    // Input YAML
+    const input = {
+  "tags": [
+    "work",
+    "urgent",
+    "project"
+  ]
+};
+
+    // Rule
+    const condition = "";
+    const action = "FOR tags REMOVE_AT -1";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -252,7 +252,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 32: REMOVE_AT out of bounds (error)', () => {
+  test('Example 32: FOR out REMOVE_AT of bounds (error)', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -263,7 +263,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "REMOVE_AT tags 5";
+    const action = "FOR tags REMOVE_AT 5";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -289,7 +289,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "INSERT_AT tags \"urgent\" AT 1";
+    const action = "FOR tags INSERT \"urgent\" AT 1";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -310,7 +310,7 @@ describe('Array Operations', () => {
     
   });
 
-  test('Example 34: INSERT_AT at end (index = length)', () => {
+  test('Example 34: FOR at INSERT end (index = length)', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -321,7 +321,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "INSERT_AT tags \"project\" AT 2";
+    const action = "FOR tags INSERT \"project\" AT 2";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -357,7 +357,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "DEDUPLICATE tags";
+    const action = "FOR tags DEDUPLICATE";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -391,7 +391,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "SORT tags";
+    const action = "FOR tags SORT";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -426,7 +426,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "SORT scores";
+    const action = "FOR scores SORT";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -469,7 +469,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "SORT_BY countsLog BY count DESC";
+    const action = "FOR countsLog SORT BY count DESC";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -512,7 +512,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MOVE tags FROM 1 TO 3";
+    const action = "FOR tags MOVE FROM 1 TO 3";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -559,7 +559,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MOVE_WHERE countsLog WHERE count > 5 TO 0";
+    const action = "FOR countsLog WHERE count > 5 TO 0";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -614,7 +614,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MOVE_WHERE countsLog WHERE count > 5 AFTER book=\"The Hobbit\"";
+    const action = "FOR countsLog WHERE count > 5 AFTER book=\"The Hobbit\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -663,7 +663,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "UPDATE_WHERE countsLog WHERE book=\"BBBK\" SET unit \"Malas\"";
+    const action = "FOR countsLog WHERE book=\"BBBK\" SET unit \"Malas\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -705,7 +705,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "UPDATE_WHERE tasks WHERE title=\"Review PR\" SET status \"done\", priority 5, completedDate \"2025-11-19\"";
+    const action = "FOR tasks WHERE title=\"Review PR\" SET status \"done\", priority 5, completedDate \"2025-11-19\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -742,7 +742,7 @@ describe('Array Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "UPDATE_WHERE countsLog WHERE title=\"Neuromancer\" SET count 216";
+    const action = "FOR countsLog WHERE title=\"Neuromancer\" SET count 216";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);

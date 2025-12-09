@@ -12,8 +12,9 @@ import { DateTime } from 'luxon';
 export function resolveTestTemplates(action: string, frontmatter: any): string {
 	let resolved = action;
 
-	// Get current date/time
-	const now = DateTime.now();
+	// Use fixed date for tests to match generated test expectations
+	// Tests were generated on 2025-11-19, so use that date
+	const now = DateTime.fromISO('2025-11-19T12:00:00');
 
 	// Date/time templates
 	resolved = resolved.replace(/\{\{today\}\}/gi, now.toISODate() || '');

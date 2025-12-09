@@ -37,6 +37,10 @@ export function evaluateCondition(ast: ConditionAST, data: any): boolean {
 			return evaluateEmptyCheck(ast, data);
 		case 'has':
 			return evaluateHas(ast, data);
+		case 'contains':
+			return evaluateContains(ast, data);
+		case 'in':
+			return evaluateIn(ast, data);
 		case 'boolean':
 			return evaluateBoolean(ast, data);
 		case 'not':
@@ -68,13 +72,41 @@ function evaluateComparison(node: ComparisonNode, data: any): boolean {
 		case '!=':
 			return leftValue != rightValue;
 		case '>':
-			return typeof leftValue === 'number' && typeof rightValue === 'number' && leftValue > rightValue;
+			// Support both number and string comparison (for dates)
+			if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+				return leftValue > rightValue;
+			}
+			if (typeof leftValue === 'string' && typeof rightValue === 'string') {
+				return leftValue > rightValue;
+			}
+			return false;
 		case '<':
-			return typeof leftValue === 'number' && typeof rightValue === 'number' && leftValue < rightValue;
+			// Support both number and string comparison (for dates)
+			if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+				return leftValue < rightValue;
+			}
+			if (typeof leftValue === 'string' && typeof rightValue === 'string') {
+				return leftValue < rightValue;
+			}
+			return false;
 		case '>=':
-			return typeof leftValue === 'number' && typeof rightValue === 'number' && leftValue >= rightValue;
+			// Support both number and string comparison (for dates)
+			if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+				return leftValue >= rightValue;
+			}
+			if (typeof leftValue === 'string' && typeof rightValue === 'string') {
+				return leftValue >= rightValue;
+			}
+			return false;
 		case '<=':
-			return typeof leftValue === 'number' && typeof rightValue === 'number' && leftValue <= rightValue;
+			// Support both number and string comparison (for dates)
+			if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+				return leftValue <= rightValue;
+			}
+			if (typeof leftValue === 'string' && typeof rightValue === 'string') {
+				return leftValue <= rightValue;
+			}
+			return false;
 		case '~':
 			return evaluateRegex(leftValue, rightValue);
 		default:
@@ -246,6 +278,79 @@ function evaluateHas(node: HasNode, data: any): boolean {
 }
 
 /**
+ * Evaluate contains: path[*].field CONTAINS value
+ * Checks if ANY item in an array has a field containing the value
+ * Supports wildcard syntax: tasks[*].assignee CONTAINS "bob"
+ */
+function evaluateContains(node: any, data: any): boolean {
+	const path = node.path;
+
+	// Check if path contains [*] wildcard
+	if (path.includes('[*]')) {
+		// Parse path: "tasks[*].assignee" => { arrayPath: "tasks", field: "assignee" }
+		const wildcardMatch = path.match(/^([^[]+)\[\*\]\.(.+)$/);
+
+		if (wildcardMatch) {
+			const [, arrayPath, field] = wildcardMatch;
+			const array = resolvePath(data, arrayPath);
+
+			if (!Array.isArray(array)) {
+				return false;
+			}
+
+			// Check if ANY item in array has the field value matching
+			return array.some(item => {
+				if (typeof item === 'object' && item !== null) {
+					return item[field] === node.value;
+				}
+				return false;
+			});
+		}
+
+		// If no match on the wildcard pattern, just check simple [*] (no field accessor)
+		// e.g., "array[*]" CONTAINS value
+		const simpleWildcard = path.match(/^([^[]+)\[\*\]$/);
+		if (simpleWildcard) {
+			const [, arrayPath] = simpleWildcard;
+			const array = resolvePath(data, arrayPath);
+
+			if (!Array.isArray(array)) {
+				return false;
+			}
+
+			return array.includes(node.value);
+		}
+	}
+
+	// No wildcard - resolve normally
+	const value = resolvePath(data, path);
+
+	// If path doesn't exist or isn't an array, return false
+	if (!Array.isArray(value)) {
+		return false;
+	}
+
+	// Check if array contains the value
+	const hasValue = value.includes(node.value);
+	return hasValue;
+}
+
+/**
+ * Evaluate in: value IN array
+ * Checks if value is in the provided array
+ */
+function evaluateIn(node: any, data: any): boolean {
+	const leftValue = resolvePath(data, node.path);
+	const arrayValue = node.array;
+	
+	if (!Array.isArray(arrayValue)) {
+		return false;
+	}
+	
+	return arrayValue.includes(leftValue);
+}
+
+/**
  * Evaluate boolean operator: AND / OR
  */
 function evaluateBoolean(node: BooleanNode, data: any): boolean {
@@ -277,7 +382,7 @@ function evaluateQuantifier(node: QuantifierNode, data: any): boolean {
 		return false;
 	}
 
-	// Empty array: ANY = false, ALL = false
+	// Empty array: ANY = false, ALL = false (per spec)
 	if (array.length === 0) {
 		return false;
 	}

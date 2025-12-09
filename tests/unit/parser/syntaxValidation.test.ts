@@ -74,40 +74,37 @@ describe('Syntax Validation - Conditions vs Actions', () => {
 			const action = 'SET status "published"';
 			const ast = parseAction(action);
 
-			// Positive: correct structure
-			expect(ast).toMatchObject({
-				op: 'SET',
-				path: 'status',
-				value: 'published',
-			});
+			// Positive: correct v2 AST structure
+			expect(ast.type).toBe('action');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.target.segments[0].key).toBe('status');
+			expect(ast.operation.value).toBe('published');
 
 			// Negative: ensure proper structure
-			expect(ast.op).not.toBe('=');
-			expect(ast.op).not.toBe('EQUALS');
-			if ('value' in ast) {
-				expect(ast.value).not.toContain('"'); // Quotes stripped
-				expect(typeof ast.value).toBe('string');
-			}
+			expect(ast.operation.type).not.toBe('=');
+			expect(ast.operation.type).not.toBe('EQUALS');
+			expect(ast.operation.value).not.toContain('"'); // Quotes stripped
+			expect(typeof ast.operation.value).toBe('string');
 		});
 
-		it('should parse MERGE for nested object fields', () => {
-			const action = 'MERGE metadata { "reviewer": "Claude", "approved": true }';
+		it('should parse FOR for MERGE nested object fields', () => {
+			const action = 'FOR metadata MERGE { "reviewer": "Claude", "approved": true }';
 			const ast = parseAction(action);
 
-			// Positive: correct structure
-			expect(ast).toMatchObject({
-				op: 'MERGE',
-				path: 'metadata',
-			});
+			// Positive: correct v2 AST structure
+			expect(ast.type).toBe('action');
+			expect(ast.operation.type).toBe('MERGE');
+			expect(ast.target.segments[0].key).toBe('metadata');
 
 			// Negative: ensure object structure preserved
-			if ('value' in ast && typeof ast.value === 'object') {
-				expect(ast.value).not.toBeNull();
-				expect(Array.isArray(ast.value)).toBe(false);
-				expect(ast.value).toHaveProperty('reviewer');
-				expect(ast.value).toHaveProperty('approved');
+			const value = ast.operation.value;
+			if (value && typeof value === 'object') {
+				expect(value).not.toBeNull();
+				expect(Array.isArray(value)).toBe(false);
+				expect(value).toHaveProperty('reviewer');
+				expect(value).toHaveProperty('approved');
 				// Values should not contain quotes
-				expect(String(ast.value.reviewer)).not.toContain('"');
+				expect(String(value.reviewer)).not.toContain('"');
 			}
 		});
 
@@ -132,23 +129,24 @@ describe('Syntax Validation - Conditions vs Actions', () => {
 		});
 
 		it('should handle UPDATE_WHERE with comma-separated fields correctly', () => {
-			const action = 'UPDATE_WHERE tasks WHERE status = "pending" SET status "active", priority 1';
+			const action = 'FOR tasks WHERE status = "pending" SET status "active", priority 1';
 			const ast = parseAction(action);
 
-			// Positive: correct structure
-			expect(ast).toMatchObject({
-				op: 'UPDATE_WHERE',
-				path: 'tasks',
-			});
+			// Positive: correct v2 AST structure
+			expect(ast.type).toBe('action');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeDefined();
+			expect(ast.target.segments[0].key).toBe('tasks');
 
 			// Negative: ensure updates array is present and correct
-			if ('updates' in ast && Array.isArray(ast.updates)) {
-				expect(ast.updates.length).toBe(2);
-				expect(ast.updates[0]).toHaveProperty('field');
-				expect(ast.updates[0]).toHaveProperty('value');
+			const updates = ast.operation.updates;
+			if (updates && Array.isArray(updates)) {
+				expect(updates.length).toBe(2);
+				expect(updates[0]).toHaveProperty('field');
+				expect(updates[0]).toHaveProperty('value');
 				// Values should be clean (no quotes)
-				expect(ast.updates[0].value).not.toContain('"');
-				expect(typeof ast.updates[1].value).toBe('number');
+				expect(updates[0].value).not.toContain('"');
+				expect(typeof updates[1].value).toBe('number');
 			}
 		});
 	});
@@ -306,7 +304,7 @@ describe('Syntax Validation - Conditions vs Actions', () => {
 
 			// These should work (corrected syntax - single operations)
 			expect(() => parseAction('SET status "overdue"')).not.toThrow();
-			expect(() => parseAction('APPEND tags "urgent"')).not.toThrow();
+			expect(() => parseAction('FOR tags APPEND "urgent"')).not.toThrow();
 		});
 	});
 
@@ -373,46 +371,46 @@ describe('Documentation Examples - Corrected Syntax', () => {
 		const actAst1 = parseAction(action1);
 
 		expect(condAst1.type).toBe('boolean');
-		expect(actAst1.op).toBe('SET');
+		expect(actAst1.operation.type).toBe('SET'); // v2 AST
 
 		// Rule 2 (same condition, different action)
 		const action2 = 'SET reviewed_date "2025-11-24T21:45:00"';
 		expect(() => parseAction(action2)).not.toThrow();
 
 		const actAst2 = parseAction(action2);
-		expect(actAst2.op).toBe('SET');
+		expect(actAst2.operation.type).toBe('SET'); // v2 AST
 
 		// Negative: ensure we need two separate rules, not one combined action
-		expect(actAst1.op).toBe('SET');
-		expect(actAst2.op).toBe('SET');
+		expect(actAst1.operation.type).toBe('SET');
+		expect(actAst2.operation.type).toBe('SET');
 		expect(actAst1).not.toEqual(actAst2); // Different actions
 	});
 
 	it('should parse corrected "Archive Old Notes" example', () => {
 		const condition = 'created_date < "2024-01-01" AND NOT tags has "keep"';
-		const action = 'APPEND tags "archived"';
+		const action = 'FOR tags APPEND "archived"';
 
 		expect(() => parseCondition(condition)).not.toThrow();
 		expect(() => parseAction(action)).not.toThrow();
 
 		const actAst = parseAction(action);
-		expect(actAst.op).toBe('APPEND');
+		expect(actAst.operation.type).toBe('APPEND'); // v2 AST
 	});
 
 	it('should parse UPDATE_WHERE with comma-separated fields (only context where commas work)', () => {
-		const action = 'UPDATE_WHERE tasks WHERE status = "pending" SET status "urgent", flagged true';
+		const action = 'FOR tasks WHERE status = "pending" SET status "urgent", flagged true';
 
 		expect(() => parseAction(action)).not.toThrow();
 
 		const ast = parseAction(action);
-		expect(ast.op).toBe('UPDATE_WHERE');
-		if ('updates' in ast) {
-			expect(ast.updates).toHaveLength(2);
+		expect(ast.operation.type).toBe('SET'); // v2 AST: UPDATE_WHERE is SET with where clause
+		expect(ast.operation.where).toBeDefined(); // Has WHERE clause
+		if ('updates' in ast.operation) {
+			expect(ast.operation.updates).toHaveLength(2);
 
 			// Negative: this is the ONLY context where comma-separated works
-			expect(ast.op).toBe('UPDATE_WHERE');
-			expect(ast.op).not.toBe('SET');
-			expect(ast.op).not.toBe('MERGE');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.type).not.toBe('MERGE');
 		}
 	});
 });

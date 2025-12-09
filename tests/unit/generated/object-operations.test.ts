@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Object Operations
-// Generated: 2025-12-03T21:00:40.149Z
+// Generated: 2025-12-06T16:22:50.458Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -19,7 +19,7 @@ describe('Object Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MERGE metadata { \"editor\": \"Jane\", \"reviewed\": true }";
+    const action = "FOR metadata MERGE { \"editor\": \"Jane\", \"reviewed\": true }";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -52,7 +52,7 @@ describe('Object Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MERGE metadata { \"version\": \"2.0\", \"status\": \"published\" }";
+    const action = "FOR metadata MERGE { \"version\": \"2.0\", \"status\": \"published\" }";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -89,7 +89,7 @@ describe('Object Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MERGE config { \"ui\": { \"fontSize\": 16, \"fontFamily\": \"Arial\" } }";
+    const action = "FOR config MERGE { \"ui\": { \"fontSize\": 16, \"fontFamily\": \"Arial\" } }";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -130,7 +130,7 @@ describe('Object Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MERGE data { \"tags\": [\"x\", \"y\"], \"count\": 10 }";
+    const action = "FOR data MERGE { \"tags\": [\"x\", \"y\"], \"count\": 10 }";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -166,7 +166,7 @@ describe('Object Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "MERGE config { \"ui\": { \"fontSize\": 16 } }";
+    const action = "FOR config MERGE { \"ui\": { \"fontSize\": 16 } }";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);

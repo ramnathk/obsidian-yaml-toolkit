@@ -241,6 +241,28 @@ class ConditionParser {
 			};
 		}
 
+		// Contains operator: path CONTAINS value (for [*] array checks)
+		if (token.type === TokenType.CONTAINS) {
+			this.advance();
+			const value = this.parseValue();
+			return {
+				type: 'contains',
+				path,
+				value,
+			};
+		}
+
+		// IN operator: path IN array
+		if (token.type === TokenType.IN) {
+			this.advance();
+			const array = this.parseValue();
+			return {
+				type: 'in',
+				path,
+				values: array,
+			};
+		}
+
 		// Comparison operators: path op value
 		if (this.isComparisonOperator(token.type)) {
 			const operator = this.parseComparisonOperator(token.type);
@@ -329,8 +351,8 @@ class ConditionParser {
 		// Expect WHERE
 		this.expect(TokenType.WHERE, 'Expected WHERE after array path in quantifier');
 
-		// Parse condition
-		const condition = this.parseOr();
+		// Parse condition (with awareness of outer array to detect top-level combinators)
+		const condition = this.parseWhereCondition(array);
 
 		return {
 			type: 'quantifier',
@@ -338,6 +360,133 @@ class ConditionParser {
 			array,
 			condition,
 		};
+	}
+
+	/**
+	 * Parse WHERE condition (like parseOr but stops at top-level quantifiers)
+	 * @param outerArray - The array path of the outer quantifier (to detect top-level combinators)
+	 */
+	private parseWhereCondition(outerArray: string): ConditionAST {
+		let left = this.parseWhereAnd(outerArray);
+
+		while (this.current().type === TokenType.OR) {
+			// Check if next token is a quantifier that references the same array as outer
+			if (this.isTopLevelQuantifier(outerArray)) {
+				break;
+			}
+
+			this.advance(); // consume OR
+			const right = this.parseWhereAnd(outerArray);
+			left = {
+				type: 'boolean',
+				operator: 'OR',
+				left,
+				right,
+			};
+		}
+
+		return left;
+	}
+
+	/**
+	 * Parse AND within WHERE clause (like parseAnd but stops at top-level quantifiers)
+	 * @param outerArray - The array path of the outer quantifier
+	 */
+	private parseWhereAnd(outerArray: string): ConditionAST {
+		let left = this.parseWhereNot(outerArray);
+
+		while (this.current().type === TokenType.AND) {
+			// Check if next token is a quantifier that references the same array as outer
+			if (this.isTopLevelQuantifier(outerArray)) {
+				break;
+			}
+
+			this.advance(); // consume AND
+			const right = this.parseWhereNot(outerArray);
+			left = {
+				type: 'boolean',
+				operator: 'AND',
+				left,
+				right,
+			};
+		}
+
+		return left;
+	}
+
+	/**
+	 * Check if the next tokens form a top-level quantifier (same array as outer)
+	 */
+	private isTopLevelQuantifier(outerArray: string): boolean {
+		const nextPos = this.position + 1;
+		if (nextPos >= this.tokens.length) {
+			return false;
+		}
+
+		const nextToken = this.tokens[nextPos];
+		// Not a quantifier at all
+		if (nextToken.type !== TokenType.ANY && nextToken.type !== TokenType.ALL) {
+			return false;
+		}
+
+		// Check the array name after the quantifier
+		const arrayPos = nextPos + 1;
+		if (arrayPos >= this.tokens.length) {
+			return false;
+		}
+
+		const arrayToken = this.tokens[arrayPos];
+		if (arrayToken.type === TokenType.IDENTIFIER && arrayToken.value === outerArray) {
+			// Same array as outer quantifier - this is a top-level combinator
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Parse NOT within WHERE clause
+	 * @param outerArray - The array path of the outer quantifier
+	 */
+	private parseWhereNot(outerArray: string): ConditionAST {
+		if (this.current().type === TokenType.NOT) {
+			this.advance(); // consume NOT
+			const operand = this.parseWhereNot(outerArray); // Allow chaining: NOT NOT condition
+			return {
+				type: 'not',
+				operand,
+			};
+		}
+
+		return this.parseWherePrimary(outerArray);
+	}
+
+	/**
+	 * Parse primary within WHERE clause (allows nested quantifiers for different arrays)
+	 * @param outerArray - The array path of the outer quantifier
+	 */
+	private parseWherePrimary(outerArray: string): ConditionAST {
+		const token = this.current();
+
+		// Parentheses
+		if (token.type === TokenType.LPAREN) {
+			this.advance(); // consume (
+			const expr = this.parseWhereCondition(outerArray); // Parse full expression inside
+			this.expect(TokenType.RPAREN, 'Expected closing parenthesis');
+			return expr;
+		}
+
+		// Allow nested quantifiers (for different arrays)
+		if (token.type === TokenType.ANY || token.type === TokenType.ALL) {
+			return this.parseQuantifier();
+		}
+
+		// Path-based expressions (comparisons, checks, etc.)
+		if (token.type === TokenType.IDENTIFIER) {
+			return this.parsePathExpression();
+		}
+
+		throw new ParserError('Expected expression in WHERE clause', token);
 	}
 
 	/**

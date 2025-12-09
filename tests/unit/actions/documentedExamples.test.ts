@@ -38,7 +38,7 @@ describe('Documented Examples - Arrays of Objects', () => {
 				]
 			};
 
-			// UPDATE_WHERE tasks WHERE status = "pending" AND priority >= 7 SET status "urgent", flagged true
+			// FOR tasks WHERE status = "pending" AND priority >= 7 SET status "urgent", flagged true
 			const condition = parseCondition('status = "pending" AND priority >= 7');
 			const result = executeUpdateWhere(data, 'tasks', condition, [
 				{ field: 'status', value: 'urgent' },
@@ -74,7 +74,7 @@ describe('Documented Examples - Arrays of Objects', () => {
 				]
 			};
 
-			// SORT_BY tasks BY priority DESC
+			// FOR tasks SORT BY priority DESC
 			const result = executeSortBy(data, 'tasks', 'priority', 'DESC');
 
 			expect(result.success).toBe(true);
@@ -100,7 +100,7 @@ describe('Documented Examples - Arrays of Objects', () => {
 				]
 			};
 
-			// MOVE_WHERE books WHERE priority = "high" TO START
+			// FOR books WHERE priority = "high" MOVE TO START
 			const condition = parseCondition('priority = "high"');
 			const result = executeMoveWhere(data, 'books', condition, 'START');
 
@@ -131,7 +131,7 @@ describe('Documented Examples - Arrays of Objects', () => {
 			};
 
 			// Step 1: Mark small pending tasks as quick-wins
-			// UPDATE_WHERE tasks WHERE status = "pending" AND points <= 3 SET status "quick-win"
+			// FOR tasks WHERE status = "pending" AND points <= 3 SET status "quick-win"
 			const condition1 = parseCondition('status = "pending" AND points <= 3');
 			const result1 = executeUpdateWhere(data, 'tasks', condition1, [
 				{ field: 'status', value: 'quick-win' }
@@ -142,7 +142,7 @@ describe('Documented Examples - Arrays of Objects', () => {
 			expect(data.tasks[2].status).toBe('quick-win'); // Code review
 
 			// Step 2: Move quick-wins to top
-			// MOVE_WHERE tasks WHERE status = "quick-win" TO START
+			// FOR tasks WHERE status = "quick-win" MOVE TO START
 			const condition2 = parseCondition('status = "quick-win"');
 			const result2 = executeMoveWhere(data, 'tasks', condition2, 'START');
 
@@ -152,7 +152,7 @@ describe('Documented Examples - Arrays of Objects', () => {
 			expect(data.tasks[2].status).toBe('in-progress');
 
 			// Step 3: Sort by points (all tasks)
-			// SORT_BY tasks BY points DESC
+			// FOR tasks SORT BY points DESC
 			const result3 = executeSortBy(data, 'tasks', 'points', 'DESC');
 
 			expect(result3.success).toBe(true);

@@ -35,6 +35,8 @@ export enum TokenType {
 	ANY = 'ANY',
 	ALL = 'ALL',
 	LENGTH = 'LENGTH',
+	CONTAINS = 'CONTAINS',              // for array contains checks
+	IN = 'IN',                          // for membership checks
 
 	// Type checks
 	TYPE_STRING = 'TYPE_STRING',          // :string
@@ -445,6 +447,8 @@ class ConditionLexer {
 			'any': TokenType.ANY,
 			'all': TokenType.ALL,
 			'length': TokenType.LENGTH,
+			'contains': TokenType.CONTAINS,
+			'in': TokenType.IN,
 			'true': TokenType.BOOLEAN,
 			'false': TokenType.BOOLEAN,
 			'null': TokenType.NULL,

@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Template Variables
-// Generated: 2025-12-02T23:50:16.309Z
+// Generated: 2025-12-06T16:22:50.460Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -8,28 +8,33 @@ import { executeTestRule, lenientDeepEqual } from '../../helpers/testRuleExecuto
 
 describe('Template Variables', () => {
 
-  test('Example 46: {{today}}', () => {
+  test('Example 59: `{{today}}`', () => {
     // Input YAML
-    const input = {};
+    const input = {
+  "title": "My Note"
+};
 
     // Rule
-    const condition = "(none)";
-    const action = "SET formattedDate \"{{date:MMMM d, yyyy}}\"";
+    const condition = "";
+    const action = "SET createdDate \"{{today}}\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
 
-    // Expected output - verify format, not exact date
+    // Expected output
+    const expectedOutput = {
+  "title": "My Note",
+  "createdDate": "2025-11-19"
+};
     const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
-    expect(result.newData.formattedDate).toMatch(/^[A-Z][a-z]+ \d{1,2}, \d{4}$/);
-    // Verify it matches the format "MMMM d, yyyy" (e.g., "December 3, 2025")
+    expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
     
   });
 
-  test('Example 47: {{fm:field}}', () => {
+  test('Example 65: `{{fm:field}}`', () => {
     // Input YAML
     const input = {
   "title": "My Project",
@@ -37,7 +42,7 @@ describe('Template Variables', () => {
 };
 
     // Rule
-    const condition = "(none)";
+    const condition = "";
     const action = "SET displayName \"{{fm:author}} - {{fm:title}}\"";
 
     // Execute rule

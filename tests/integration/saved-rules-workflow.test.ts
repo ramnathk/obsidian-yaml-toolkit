@@ -193,9 +193,9 @@ describe('Saved Rules Workflow', () => {
 
 			// Parse and execute action
 			const { parseAction } = await import('../../src/parser/actionParser');
-			const { executeSet } = await import('../../src/actions/basicActions');
+			const { executeAction } = await import('../../src/core/ruleEngine');
 			const actionAST = parseAction(loadedRule.action);
-			const result = executeSet(testData, actionAST.path, actionAST.value);
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.status).toBe('published');
@@ -206,7 +206,7 @@ describe('Saved Rules Workflow', () => {
 				...createNewRule(),
 				name: 'Update Brave New World mantras',
 				condition: 'ANY countsLog WHERE mantra = "Brave New World"',
-				action: 'UPDATE_WHERE countsLog WHERE mantra="Brave New World" SET unit "Meditations", verified true',
+				action: 'FOR countsLog WHERE mantra="Brave New World" SET unit "Meditations", verified true',
 			};
 
 			await saveRule(mockPlugin as any, rule);
@@ -230,14 +230,9 @@ describe('Saved Rules Workflow', () => {
 
 			// Execute action
 			const { parseAction } = await import('../../src/parser/actionParser');
-			const { executeUpdateWhere } = await import('../../src/actions/arrayActions');
+			const { executeAction } = await import('../../src/core/ruleEngine');
 			const actionAST = parseAction(loadedRule.action);
-			const result = executeUpdateWhere(
-				testData,
-				actionAST.path,
-				actionAST.condition,
-				actionAST.updates
-			);
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.countsLog[1].unit).toBe('Meditations');
@@ -249,7 +244,7 @@ describe('Saved Rules Workflow', () => {
 				...createNewRule(),
 				name: 'Sort countsLog alphabetically',
 				condition: 'countsLog exists',
-				action: 'SORT_BY countsLog BY mantra ASC',
+				action: 'FOR countsLog SORT BY mantra ASC',
 			};
 
 			await saveRule(mockPlugin as any, rule);
@@ -274,7 +269,8 @@ describe('Saved Rules Workflow', () => {
 			expect(evaluateCondition(conditionAST, testData)).toBe(true);
 
 			const actionAST = parseAction(loadedRule.action);
-			const result = executeSortBy(testData, actionAST.path, actionAST.field, actionAST.order);
+			const { executeAction } = await import('../../src/core/ruleEngine');
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.countsLog[0].mantra).toBe('Animal Farm');
@@ -287,7 +283,7 @@ describe('Saved Rules Workflow', () => {
 				...createNewRule(),
 				name: 'Add urgent tag',
 				condition: 'priority > 5',
-				action: 'APPEND tags "urgent"',
+				action: 'FOR tags APPEND "urgent"',
 			};
 
 			const rule2: Rule = {
@@ -313,17 +309,17 @@ describe('Saved Rules Workflow', () => {
 			const cond1 = parseCondition(data.rules[0].condition);
 			expect(evaluateCondition(cond1, testData1)).toBe(true);
 			const act1 = parseAction(data.rules[0].action);
-			executeAppend(testData1, act1.path, act1.value);
+			const { executeAction } = await import('../../src/core/ruleEngine');
+			executeAction(act1, testData1);
 			expect(testData1.tags).toContain('urgent');
 
 			// Execute rule 2
 			const testData2 = { status: 'draft' };
-			const { executeSet } = await import('../../src/actions/basicActions');
 
 			const cond2 = parseCondition(data.rules[1].condition);
 			expect(evaluateCondition(cond2, testData2)).toBe(true);
 			const act2 = parseAction(data.rules[1].action);
-			executeSet(testData2, act2.path, act2.value);
+			executeAction(act2, testData2);
 			expect(testData2.status).toBe('reviewed');
 		});
 	});
@@ -397,22 +393,22 @@ describe('Saved Rules Workflow', () => {
 
 			// Execute on test data
 			const { parseAction } = await import('../../src/parser/actionParser');
-			const { executeSet } = await import('../../src/actions/basicActions');
+			const { executeAction } = await import('../../src/core/ruleEngine');
 
 			const testData = { title: 'My Note' };
 			const actionAST = parseAction(savedRule.action);
-			const result = executeSet(testData, actionAST.path, actionAST.value);
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.status).toBe('published');
 		});
 
-		it('Example 3.1.1: APPEND tags - via saved rule with condition', async () => {
+		it('Example 3.1.1: FOR tags APPEND - via saved rule with condition', async () => {
 			const rule: Rule = {
 				...createNewRule(),
 				name: 'Add urgent tag to high priority',
 				condition: 'priority > 5',
-				action: 'APPEND tags "urgent"',
+				action: 'FOR tags APPEND "urgent"',
 			};
 
 			await saveRule(mockPlugin as any, rule);
@@ -432,7 +428,8 @@ describe('Saved Rules Workflow', () => {
 			expect(matches).toBe(true);
 
 			const actionAST = parseAction(savedRule.action);
-			const result = executeAppend(testData, actionAST.path, actionAST.value);
+			const { executeAction } = await import('../../src/core/ruleEngine');
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.tags).toEqual(['work', 'urgent']);
@@ -443,7 +440,7 @@ describe('Saved Rules Workflow', () => {
 				...createNewRule(),
 				name: 'Update Brave New World entries',
 				condition: 'ANY countsLog WHERE mantra = "Brave New World"',
-				action: 'UPDATE_WHERE countsLog WHERE mantra="Brave New World" SET unit "Meditations", verified true',
+				action: 'FOR countsLog WHERE mantra="Brave New World" SET unit "Meditations", verified true',
 			};
 
 			await saveRule(mockPlugin as any, rule);
@@ -465,14 +462,9 @@ describe('Saved Rules Workflow', () => {
 
 			// Execute action
 			const { parseAction } = await import('../../src/parser/actionParser');
-			const { executeUpdateWhere } = await import('../../src/actions/arrayActions');
+			const { executeAction } = await import('../../src/core/ruleEngine');
 			const actionAST = parseAction(savedRule.action);
-			const result = executeUpdateWhere(
-				testData,
-				actionAST.path,
-				actionAST.condition,
-				actionAST.updates
-			);
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.countsLog[1].unit).toBe('Meditations');
@@ -484,7 +476,7 @@ describe('Saved Rules Workflow', () => {
 				...createNewRule(),
 				name: 'Sort mantras alphabetically',
 				condition: 'countsLog.length > 0',
-				action: 'SORT_BY countsLog BY mantra ASC',
+				action: 'FOR countsLog SORT BY mantra ASC',
 			};
 
 			await saveRule(mockPlugin as any, rule);
@@ -508,7 +500,8 @@ describe('Saved Rules Workflow', () => {
 			expect(evaluateCondition(conditionAST, testData)).toBe(true);
 
 			const actionAST = parseAction(savedRule.action);
-			const result = executeSortBy(testData, actionAST.path, actionAST.field, actionAST.order);
+			const { executeAction } = await import('../../src/core/ruleEngine');
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.countsLog.map(c => c.mantra)).toEqual(['Animal Farm', 'Brave New World', 'Great Gatsby']);
@@ -519,7 +512,7 @@ describe('Saved Rules Workflow', () => {
 				...createNewRule(),
 				name: 'Move Brave New World to start',
 				condition: '',
-				action: 'MOVE_WHERE countsLog WHERE mantra="Brave New World" TO START',
+				action: 'FOR countsLog WHERE mantra="Brave New World" MOVE TO START',
 			};
 
 			await saveRule(mockPlugin as any, rule);
@@ -535,15 +528,10 @@ describe('Saved Rules Workflow', () => {
 			};
 
 			const { parseAction } = await import('../../src/parser/actionParser');
-			const { executeMoveWhere } = await import('../../src/actions/arrayActions');
+			const { executeAction } = await import('../../src/core/ruleEngine');
 
 			const actionAST = parseAction(savedRule.action);
-			const result = executeMoveWhere(
-				testData,
-				actionAST.path,
-				actionAST.condition,
-				actionAST.target
-			);
+			const result = executeAction(actionAST, testData);
 
 			expect(result.success).toBe(true);
 			expect(testData.countsLog[0].mantra).toBe('Brave New World');

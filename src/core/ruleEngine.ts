@@ -12,7 +12,7 @@ import { parseCondition } from '../parser/conditionParser';
 import { parseAction } from '../parser/actionParser';
 import { evaluateCondition } from '../evaluator/conditionEvaluator';
 import { resolveTemplates, TemplateContext } from './templateEngine';
-import { executeSet, executeAdd, executeDelete, executeRename } from '../actions/basicActions';
+import { executeSet, executeAdd, executeDelete, executeRename, executeIncrement, executeDecrement } from '../actions/basicActions';
 import {
 	executeAppend,
 	executePrepend,
@@ -128,60 +128,119 @@ export async function executeRule(app: App, rule: Rule, file: TFile): Promise<Fi
 }
 
 /**
- * Execute an action AST on data
+ * Convert v2.0 path segments to string path
+ * [{ type: 'property', key: 'title' }] -> "title"
+ * [{ type: 'property', key: 'tasks' }, { type: 'index', index: 0 }] -> "tasks[0]"
+ * [{ type: 'property', key: 'metadata' }, { type: 'property', key: 'author' }] -> "metadata.author"
  */
-function executeAction(ast: ActionAST, data: any): import('../types').ActionResult {
-	switch (ast.op) {
-		case 'SET':
-			return executeSet(data, ast.path, ast.value);
-		case 'ADD':
-			return executeAdd(data, ast.path, ast.value);
-		case 'DELETE':
-			return executeDelete(data, ast.path);
-		case 'RENAME':
-			return executeRename(data, ast.oldPath, ast.newPath);
-		case 'APPEND':
-			return executeAppend(data, ast.path, ast.value);
-		case 'PREPEND':
-			return executePrepend(data, ast.path, ast.value);
-		case 'INSERT_AT':
-			return executeInsertAt(data, ast.path, ast.value, ast.index);
-		case 'INSERT_AFTER':
-			return executeInsertAfter(data, ast.path, ast.value, ast.target);
-		case 'INSERT_BEFORE':
-			return executeInsertBefore(data, ast.path, ast.value, ast.target);
-		case 'REMOVE':
-			return executeRemove(data, ast.path, ast.value);
-		case 'REMOVE_ALL':
-			return executeRemoveAll(data, ast.path, ast.value);
-		case 'REMOVE_AT':
-			return executeRemoveAt(data, ast.path, ast.index);
-		case 'REPLACE':
-			return executeReplace(data, ast.path, ast.oldValue, ast.newValue);
-		case 'REPLACE_ALL':
-			return executeReplaceAll(data, ast.path, ast.oldValue, ast.newValue);
-		case 'DEDUPLICATE':
-			return executeDeduplicate(data, ast.path);
-		case 'SORT':
-			return executeSort(data, ast.path, ast.order);
-		case 'SORT_BY':
-			return executeSortBy(data, ast.path, ast.field, ast.order);
-		case 'MOVE':
-			return executeMove(data, ast.path, ast.fromIndex, ast.toIndex);
-		case 'MOVE_WHERE':
-			return executeMoveWhere(data, ast.path, ast.condition, ast.target);
-		case 'UPDATE_WHERE':
-			return executeUpdateWhere(data, ast.path, ast.condition, ast.updates);
-		case 'MERGE':
-			return executeMerge(data, ast.path, ast.value);
-		case 'MERGE_OVERWRITE':
-			return executeMergeOverwrite(data, ast.path, ast.value);
-		default:
-			return {
-				success: false,
-				modified: false,
-				changes: [],
-				error: `Unknown operation: ${(ast as any).op}`,
-			};
+function segmentsToPath(segments: Array<{ type: string; key?: string; index?: number }>): string {
+	let path = '';
+	for (let i = 0; i < segments.length; i++) {
+		const seg = segments[i];
+		if (seg.type === 'property') {
+			if (path && !path.endsWith(']')) path += '.';  // Add dot before property (except after index)
+			path += seg.key;
+		} else if (seg.type === 'index') {
+			path += `[${seg.index}]`;
+		}
 	}
+	return path;
+}
+
+/**
+ * Execute an action AST on data (supports both v1.0 and v2.0 AST structures)
+ */
+export function executeAction(ast: ActionAST, data: any): import('../types').ActionResult {
+	// Handle v2.0 AST structure: { type: 'action', target, operation }
+	if ((ast as any).type === 'action') {
+		const v2ast = ast as any;
+		const operation = v2ast.operation;
+		const path = segmentsToPath(v2ast.target.segments);
+
+		switch (operation.type) {
+			case 'SET':
+				// Check if conditional (has 'where' and 'updates')
+				if (operation.where && operation.updates) {
+					// Conditional SET uses UPDATE_WHERE: FOR items WHERE ... SET field value
+					return executeUpdateWhere(data, path, operation.where, operation.updates);
+				}
+				return executeSet(data, path, operation.value);
+			case 'ADD':
+				return executeAdd(data, path, operation.value);
+			case 'DELETE':
+				return executeDelete(data, path);
+			case 'RENAME':
+				return executeRename(data, path, operation.to);
+			case 'INCREMENT':
+				return executeIncrement(data, path, operation.amount || 1);
+			case 'DECREMENT':
+				return executeDecrement(data, path, operation.amount || 1);
+			case 'APPEND':
+				return executeAppend(data, path, operation.value);
+			case 'PREPEND':
+				return executePrepend(data, path, operation.value);
+			case 'INSERT':
+				return executeInsertAt(data, path, operation.value, operation.index);
+			case 'INSERT_AFTER':
+				return executeInsertAfter(data, path, operation.value, operation.referenceValue);
+			case 'INSERT_BEFORE':
+				return executeInsertBefore(data, path, operation.value, operation.referenceValue);
+			case 'REMOVE':
+				// Check if conditional (has 'where')
+				if (operation.where) {
+					// Conditional REMOVE uses special handling - remove items matching WHERE
+					// This is v2.0 behavior: FOR items WHERE ... REMOVE
+					// Execute by iterating array and removing matching items
+					const result = executeUpdateWhere(data, path, operation.where, []);
+					// Empty updates array means "remove the item"
+					// Return with appropriate changes message
+					return {
+						...result,
+						changes: result.changes.map(c => c.replace('UPDATE_WHERE', 'REMOVE WHERE'))
+					};
+				}
+				return executeRemove(data, path, operation.value);
+			case 'REMOVE_ALL':
+				return executeRemoveAll(data, path, operation.value);
+			case 'REMOVE_AT':
+				return executeRemoveAt(data, path, operation.index);
+			case 'REPLACE':
+				return executeReplace(data, path, operation.oldValue, operation.newValue);
+			case 'REPLACE_ALL':
+				return executeReplaceAll(data, path, operation.oldValue, operation.newValue);
+			case 'DEDUPLICATE':
+				return executeDeduplicate(data, path);
+			case 'SORT':
+				// Check if it's SORT BY (has 'by' field)
+				if (operation.by) {
+					return executeSortBy(data, path, operation.by, operation.order || 'ASC');
+				}
+				return executeSort(data, path, operation.order || 'ASC');
+			case 'MOVE':
+				// Check if conditional (has 'where') or index-based (has 'from')
+				if (operation.where) {
+					return executeMoveWhere(data, path, operation.where, operation.to);
+				}
+				return executeMove(data, path, operation.from, operation.to);
+			case 'MERGE':
+				return executeMerge(data, path, operation.value);
+			case 'MERGE_OVERWRITE':
+				return executeMergeOverwrite(data, path, operation.value);
+			default:
+				return {
+					success: false,
+					modified: false,
+					changes: [],
+					error: `Unknown v2.0 operation: ${operation.type}`,
+				};
+		}
+	}
+
+	// If we get here, AST is invalid
+	return {
+		success: false,
+		modified: false,
+		changes: [],
+		error: `Invalid AST structure - expected v2.0 format with type='action'`,
+	};
 }

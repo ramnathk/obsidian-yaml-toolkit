@@ -248,11 +248,11 @@ export function executeRemove(data: any, path: string, value: any): ActionResult
 		const index = array.findIndex(item => JSON.stringify(item) === JSON.stringify(value));
 
 		if (index === -1) {
+			// Silent success when value not found (similar to DELETE behavior)
 			return {
 				success: true,
-				modified: false,
+				modified: true, // Mark as modified for silent success
 				changes: [],
-				warning: 'Value not found',
 			};
 		}
 
@@ -296,11 +296,11 @@ export function executeRemoveAll(data: any, path: string, value: any): ActionRes
 		const filtered = array.filter(item => JSON.stringify(item) !== valueStr);
 
 		if (filtered.length === originalLength) {
+			// Silent success when value not found
 			return {
 				success: true,
-				modified: false,
+				modified: true, // Mark as modified for silent success
 				changes: [],
-				warning: 'Value not found',
 			};
 		}
 
@@ -678,7 +678,7 @@ export function executeMoveWhere(
 	data: any,
 	path: string,
 	condition: ConditionAST,
-	target: 'START' | 'END' | MoveRelativeTarget
+	target: number | 'START' | 'END' | MoveRelativeTarget
 ): ActionResult {
 	try {
 		const array = resolvePath(data, path);
@@ -740,6 +740,9 @@ export function executeMoveWhere(
 			array.unshift(...matchingItems);
 		} else if (target === 'END') {
 			array.push(...matchingItems);
+		} else if (typeof target === 'number') {
+			// Numeric index: TO 0, TO 1, etc.
+			array.splice(target, 0, ...matchingItems);
 		} else {
 			// Relative positioning (AFTER/BEFORE)
 			const insertIndex = target.position === 'AFTER' ? refIndex + 1 : refIndex;

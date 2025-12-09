@@ -148,6 +148,8 @@ export type ConditionAST =
 	| TypeCheckNode
 	| EmptyCheckNode
 	| HasNode
+	| ContainsNode
+	| InNode
 	| BooleanNode
 	| NotNode
 	| QuantifierNode;
@@ -185,6 +187,18 @@ export interface HasNode {
 	operator: 'has' | '!has';
 }
 
+export interface ContainsNode {
+	type: 'contains';
+	path: string;
+	value: any;
+}
+
+export interface InNode {
+	type: 'in';
+	path: string;
+	values: any[];
+}
+
 export interface BooleanNode {
 	type: 'boolean';
 	operator: 'AND' | 'OR';
@@ -212,6 +226,8 @@ export type ActionAST =
 	| AddAction
 	| DeleteAction
 	| RenameAction
+	| IncrementAction
+	| DecrementAction
 	| AppendAction
 	| PrependAction
 	| InsertAction
@@ -254,6 +270,18 @@ export interface RenameAction {
 	op: 'RENAME';
 	oldPath: string;
 	newPath: string;
+}
+
+export interface IncrementAction {
+	op: 'INCREMENT';
+	path: string;
+	amount: number;
+}
+
+export interface DecrementAction {
+	op: 'DECREMENT';
+	path: string;
+	amount: number;
 }
 
 export interface AppendAction {

@@ -200,7 +200,7 @@ describe('Logger', () => {
 
 			const rule: any = {
 				id: 'rule-1', name: 'Complete Test', condition: 'tags exists',
-				action: 'APPEND tags "processed"', scope: { type: 'vault' },
+				action: 'FOR tags APPEND "processed"', scope: { type: 'vault' },
 				options: { backup: true }, created: '2025-11-20'
 			};
 

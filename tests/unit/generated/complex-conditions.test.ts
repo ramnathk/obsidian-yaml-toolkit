@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Complex Conditions
-// Generated: 2025-12-03T21:00:40.150Z
+// Generated: 2025-12-06T16:22:50.459Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -55,7 +55,7 @@ describe('Complex Conditions', () => {
   "status": "published",
   "priority": 5
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
@@ -106,7 +106,7 @@ describe('Complex Conditions', () => {
     const expectedOutput = {
   "status": "archived"
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
@@ -231,7 +231,7 @@ describe('Complex Conditions', () => {
     }
   ]
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);

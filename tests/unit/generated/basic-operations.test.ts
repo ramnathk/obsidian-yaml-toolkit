@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Basic Operations
-// Generated: 2025-12-03T21:00:40.143Z
+// Generated: 2025-12-06T16:22:50.452Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -215,7 +215,7 @@ describe('Basic Operations', () => {
     const expectedOutput = {
   "title": "My Note"
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);

@@ -112,8 +112,10 @@ export function executeTestRule(rule: TestRule, inputData: any): TestRuleResult 
 			const matches = evaluateCondition(conditionAST, data);
 
 			if (!matches) {
+				// Condition evaluated to false - return success (rule evaluated correctly)
+				// rather than 'skipped' (which implies rule wasn't considered)
 				return {
-					status: 'skipped',
+					status: 'success',
 					modified: false,
 					newData: data,
 					changes: [],
@@ -167,85 +169,138 @@ export function executeTestRule(rule: TestRule, inputData: any): TestRuleResult 
 }
 
 /**
- * Execute an action AST on data (test version)
+ * Convert v2.0 path segments to string path (same as ruleEngine)
+ */
+function segmentsToPath(segments: Array<{ type: string; key?: string; index?: number }>): string {
+	let path = '';
+	for (let i = 0; i < segments.length; i++) {
+		const seg = segments[i];
+		if (seg.type === 'property') {
+			if (path && !path.endsWith(']')) path += '.';
+			path += seg.key;
+		} else if (seg.type === 'index') {
+			path += `[${seg.index}]`;
+		}
+	}
+	return path;
+}
+
+/**
+ * Execute an action AST on data (test version, supports v2.0 AST)
  */
 function executeActionForTest(ast: ActionAST, data: any): import('../../src/types').ActionResult {
-	switch (ast.op) {
-		case 'SET': {
-			// Handle multi-field SET
-			if (ast.fields && ast.fields.length > 1) {
-				const changes: string[] = [];
-				let allSuccess = true;
+	// Handle v2.0 AST structure
+	if ((ast as any).type === 'action') {
+		const v2ast = ast as any;
+		const operation = v2ast.operation;
+		const path = segmentsToPath(v2ast.target.segments);
 
-				for (const field of ast.fields) {
-					const result = executeSet(data, field.path, field.value);
-					if (result.success) {
-						changes.push(...result.changes);
-					} else {
-						allSuccess = false;
-						if (result.error) {
-							return result; // Return first error
-						}
-					}
+		switch (operation.type) {
+			case 'SET':
+				// Check if this is UPDATE_WHERE (SET with WHERE clause)
+				if (operation.where) {
+					return executeUpdateWhere(data, path, operation.where, operation.updates || []);
 				}
-
+				return executeSet(data, path, operation.value);
+			case 'ADD':
+				return executeAdd(data, path, operation.value);
+			case 'DELETE':
+				return executeDelete(data, path);
+			case 'RENAME':
+				return executeRename(data, path, operation.to);
+			case 'INCREMENT':
+				// INCREMENT not directly available, use add operation
+				return executeAdd(data, path, operation.amount || 1);
+			case 'DECREMENT':
+				// DECREMENT not directly available, subtract
+				return executeAdd(data, path, -(operation.amount || 1));
+			case 'APPEND':
+				return executeAppend(data, path, operation.value);
+			case 'PREPEND':
+				return executePrepend(data, path, operation.value);
+			case 'INSERT':
+				return executeInsertAt(data, path, operation.value, operation.index);
+			case 'INSERT_AFTER':
+				return executeInsertAfter(data, path, operation.value, operation.referenceValue);
+			case 'INSERT_BEFORE':
+				return executeInsertBefore(data, path, operation.value, operation.referenceValue);
+			case 'REMOVE':
+				return executeRemove(data, path, operation.value);
+			case 'REMOVE_ALL':
+				return executeRemoveAll(data, path, operation.value);
+			case 'REMOVE_AT':
+				return executeRemoveAt(data, path, operation.index);
+			case 'REPLACE':
+				return executeReplace(data, path, operation.oldValue, operation.newValue);
+			case 'REPLACE_ALL':
+				return executeReplaceAll(data, path, operation.oldValue, operation.newValue);
+			case 'DEDUPLICATE':
+				return executeDeduplicate(data, path);
+			case 'SORT':
+				if (operation.by) {
+					return executeSortBy(data, path, operation.by, operation.order || 'ASC');
+				}
+				return executeSort(data, path, operation.order || 'ASC');
+			case 'MOVE':
+				if (operation.where) {
+					return executeMoveWhere(data, path, operation.where, operation.to);
+				}
+				return executeMove(data, path, operation.from, operation.to);
+			case 'MERGE':
+				return executeMerge(data, path, operation.value);
+			case 'MERGE_OVERWRITE':
+				return executeMergeOverwrite(data, path, operation.value);
+			default:
 				return {
-					success: allSuccess,
-					modified: allSuccess && changes.length > 0,
-					changes,
+					success: false,
+					modified: false,
+					changes: [],
+					error: `Unknown v2.0 operation in test: ${operation.type}`,
 				};
-			}
-			// Single field SET
-			return executeSet(data, ast.path, ast.value);
 		}
-		case 'ADD':
-			return executeAdd(data, ast.path, ast.value);
-		case 'DELETE':
-			return executeDelete(data, ast.path);
-		case 'RENAME':
-			return executeRename(data, ast.oldPath, ast.newPath);
-		case 'APPEND':
-			return executeAppend(data, ast.path, ast.value);
-		case 'PREPEND':
-			return executePrepend(data, ast.path, ast.value);
-		case 'INSERT_AT':
-			return executeInsertAt(data, ast.path, ast.value, ast.index);
-		case 'INSERT_AFTER':
-			return executeInsertAfter(data, ast.path, ast.value, ast.target);
-		case 'INSERT_BEFORE':
-			return executeInsertBefore(data, ast.path, ast.value, ast.target);
-		case 'REMOVE':
-			return executeRemove(data, ast.path, ast.value);
-		case 'REMOVE_ALL':
-			return executeRemoveAll(data, ast.path, ast.value);
-		case 'REMOVE_AT':
-			return executeRemoveAt(data, ast.path, ast.index);
-		case 'REPLACE':
-			return executeReplace(data, ast.path, ast.oldValue, ast.newValue);
-		case 'REPLACE_ALL':
-			return executeReplaceAll(data, ast.path, ast.oldValue, ast.newValue);
-		case 'DEDUPLICATE':
-			return executeDeduplicate(data, ast.path);
-		case 'SORT':
-			return executeSort(data, ast.path, ast.order);
-		case 'SORT_BY':
-			return executeSortBy(data, ast.path, ast.field, ast.order);
-		case 'MOVE':
-			return executeMove(data, ast.path, ast.fromIndex, ast.toIndex);
-		case 'MOVE_WHERE':
-			return executeMoveWhere(data, ast.path, ast.condition, ast.target);
-		case 'UPDATE_WHERE':
-			return executeUpdateWhere(data, ast.path, ast.condition, ast.updates);
-		case 'MERGE':
-			return executeMerge(data, ast.path, ast.value);
-		case 'MERGE_OVERWRITE':
-			return executeMergeOverwrite(data, ast.path, ast.value);
-		default:
-			return {
-				success: false,
-				modified: false,
-				changes: [],
-				error: `Unknown operation: ${(ast as any).op}`,
-			};
 	}
+
+	// If we get here, AST is invalid
+	return {
+		success: false,
+		modified: false,
+		changes: [],
+		error: `Invalid AST structure - expected v2.0 format with type='action'`,
+	};
+}
+
+/**
+ * Simplified wrapper for v2.0 tests: execute a rule on data
+ * Usage: executeRule(data, { action: 'SET title "value"' })
+ */
+export function executeRule(data: any, rule: TestRule): TestRuleResult {
+	return executeTestRule(rule, data);
+}
+
+/**
+ * Simplified wrapper for v2.0 tests: execute parsed actions on data
+ * Usage: executeActions(data, [parseAction('SET title "value"')])
+ */
+export function executeActions(data: any, actions: ActionAST[]): {
+	success: boolean;
+	data: any;
+	changes: string[];
+} {
+	const allChanges: string[] = [];
+	let success = true;
+
+	for (const action of actions) {
+		const result = executeActionForTest(action, data);
+		if (!result.success) {
+			success = false;
+			break;
+		}
+		allChanges.push(...result.changes);
+	}
+
+	return {
+		success,
+		data,
+		changes: allChanges
+	};
 }

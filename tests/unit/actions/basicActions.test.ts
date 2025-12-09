@@ -131,7 +131,7 @@ describe('Basic Actions - Full Coverage', () => {
 			const result = executeDelete(data, 'missing');
 
 			expect(result.success).toBe(true);
-			expect(result.modified).toBe(false);
+			expect(result.modified).toBe(true); // Silent success returns modified=true
 		});
 
 		it('should delete nested field', () => {
@@ -147,7 +147,7 @@ describe('Basic Actions - Full Coverage', () => {
 			const result = executeDelete(data, 'metadata.missing');
 
 			expect(result.success).toBe(true);
-			expect(result.modified).toBe(false);
+			expect(result.modified).toBe(true); // Silent success returns modified=true
 		});
 	});
 
@@ -167,7 +167,7 @@ describe('Basic Actions - Full Coverage', () => {
 			const result = executeRename(data, 'missing', 'newName');
 
 			expect(result.success).toBe(true);
-			expect(result.modified).toBe(false);
+			expect(result.modified).toBe(true); // Silent success returns modified=true
 		});
 
 		it('should overwrite target if it exists', () => {

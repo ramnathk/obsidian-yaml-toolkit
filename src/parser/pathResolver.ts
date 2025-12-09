@@ -36,7 +36,12 @@ export function resolvePath(data: any, path: string): any {
 			if (segment.key === undefined) {
 				return undefined;
 			}
-			current = current[segment.key];
+			// Special handling for .length on objects
+			if (segment.key === 'length' && typeof current === 'object' && current !== null && !Array.isArray(current)) {
+				current = Object.keys(current).length;
+			} else {
+				current = current[segment.key];
+			}
 		} else if (segment.type === 'index') {
 			if (!Array.isArray(current)) {
 				return undefined;

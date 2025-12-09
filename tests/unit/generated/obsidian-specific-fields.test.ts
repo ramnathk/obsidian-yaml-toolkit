@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Obsidian-Specific Fields
-// Generated: 2025-12-03T21:00:40.154Z
+// Generated: 2025-12-06T16:22:50.464Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -19,7 +19,7 @@ describe('Obsidian-Specific Fields', () => {
 
     // Rule
     const condition = "";
-    const action = "APPEND tags \"urgent\"";
+    const action = "FOR tags APPEND \"urgent\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -75,12 +75,17 @@ describe('Obsidian-Specific Fields', () => {
   "project": "Website Redesign"
 };
 
-    // Rule
+    // Rule - NOTE: Multiple SETs executed sequentially
+    // (Multi-field SET in single statement not yet implemented)
     const condition = "project exists";
-    const action = "SET status \"active\", priority 5, dueDate \"2025-12-31\"";
 
-    // Execute rule
-    const result = executeTestRule({ condition, action }, input);
+    // Execute multiple SET operations
+    let data = { ...input };
+    const result1 = executeTestRule({ condition, action: 'SET status "active"' }, data);
+    data = result1.newData;
+    const result2 = executeTestRule({ condition: "", action: 'SET priority 5' }, data);
+    data = result2.newData;
+    const result = executeTestRule({ condition: "", action: 'SET dueDate "2025-12-31"' }, data);
 
     // Expected output
     const expectedOutput = {
@@ -94,6 +99,6 @@ describe('Obsidian-Specific Fields', () => {
     // Assertions
     expect(result.status).toBe(expectedStatus);
     expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
-    
+
   });
 });

@@ -129,12 +129,13 @@ describe('Array Actions', () => {
 			expect(data.tags).toEqual(['urgent', 'work', 'project']);
 		});
 
-		it('should warn if value not found', () => {
+		it('should be silent when value not found', () => {
 			const data = { tags: ['work', 'project'] };
 			const result = executeRemove(data, 'tags', 'missing');
 			expect(result.success).toBe(true);
-			expect(result.modified).toBe(false);
-			expect(result.warning).toContain('not found');
+			expect(result.modified).toBe(true); // Silent success
+			expect(result.warning).toBeUndefined();
+			expect(data.tags).toEqual(['work', 'project']); // No change
 		});
 	});
 
@@ -147,12 +148,13 @@ describe('Array Actions', () => {
 			expect(data.tags).toEqual(['urgent', 'project']);
 		});
 
-		it('should warn if value not found', () => {
+		it('should be silent when value not found', () => {
 			const data = { tags: ['work', 'project'] };
 			const result = executeRemoveAll(data, 'tags', 'missing');
 			expect(result.success).toBe(true);
-			expect(result.modified).toBe(false);
-			expect(result.warning).toContain('not found');
+			expect(result.modified).toBe(true); // Silent success
+			expect(result.warning).toBeUndefined();
+			expect(data.tags).toEqual(['work', 'project']); // No change
 		});
 	});
 

@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Edge Cases
-// Generated: 2025-12-02T23:50:16.311Z
+// Generated: 2025-12-06T16:22:50.460Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -8,12 +8,12 @@ import { executeTestRule, lenientDeepEqual } from '../../helpers/testRuleExecuto
 
 describe('Edge Cases', () => {
 
-  test('Example 48: Empty frontmatter block', () => {
-    // Input YAML
+  test('Example 67: Empty frontmatter block', () => {
+    // Input YAML (empty frontmatter)
     const input = {};
 
     // Rule
-    const condition = "(none)";
+    const condition = "";
     const action = "SET status \"draft\"";
 
     // Execute rule
@@ -28,29 +28,31 @@ describe('Edge Cases', () => {
     // Assertions
     expect(result.status).toBe(expectedStatus);
     expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
-    
+
   });
 
-  test('Example 49: Invalid YAML (parse error)', () => {
+  test.skip('Example 68: Invalid YAML (parse error)', () => {
+    // NOTE: This test is skipped because testRuleExecutor works with parsed objects,
+    // not raw YAML strings, so it cannot test YAML parsing errors.
+    // YAML parsing is tested separately in yamlProcessor tests.
+
     // Input YAML
     const input = {};
 
     // Rule
-    const condition = "(none)";
+    const condition = "";
     const action = "SET reviewed true";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
 
     // Expected output
-    const expectedOutput = {
-  "relatedNote": "[[Project Overview]]"
-};
-    const expectedStatus = "success";
+    const expectedOutput = null;
+    const expectedStatus = "error";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
     // Error case - data unchanged, just verify error occurred
-    
+
   });
 });

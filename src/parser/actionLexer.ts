@@ -6,16 +6,21 @@
  */
 
 export enum ActionTokenType {
-	// Operations
+	// v2.0 Hybrid Keywords
+	FOR = 'FOR',              // Collection target specifier
+
+	// Scalar operations
 	SET = 'SET',
 	ADD = 'ADD',
 	DELETE = 'DELETE',
 	RENAME = 'RENAME',
+	INCREMENT = 'INCREMENT',
+	DECREMENT = 'DECREMENT',
+
+	// Array operations
 	APPEND = 'APPEND',
 	PREPEND = 'PREPEND',
-	INSERT_AT = 'INSERT_AT',
-	INSERT_AFTER = 'INSERT_AFTER',
-	INSERT_BEFORE = 'INSERT_BEFORE',
+	INSERT = 'INSERT',
 	REMOVE = 'REMOVE',
 	REMOVE_ALL = 'REMOVE_ALL',
 	REMOVE_AT = 'REMOVE_AT',
@@ -23,13 +28,11 @@ export enum ActionTokenType {
 	REPLACE_ALL = 'REPLACE_ALL',
 	DEDUPLICATE = 'DEDUPLICATE',
 	SORT = 'SORT',
-	SORT_BY = 'SORT_BY',
 	MOVE = 'MOVE',
-	MOVE_WHERE = 'MOVE_WHERE',
-	UPDATE_WHERE = 'UPDATE_WHERE',
+
+	// Object operations
 	MERGE = 'MERGE',
 	MERGE_OVERWRITE = 'MERGE_OVERWRITE',
-	CLEAR = 'CLEAR',
 
 	// Keywords
 	WHERE = 'WHERE',
@@ -427,15 +430,16 @@ class ActionLexer {
 		const upper = value.toUpperCase();
 
 		const operationMap: Record<string, ActionTokenType> = {
+			'FOR': ActionTokenType.FOR,
 			'SET': ActionTokenType.SET,
 			'ADD': ActionTokenType.ADD,
 			'DELETE': ActionTokenType.DELETE,
 			'RENAME': ActionTokenType.RENAME,
+			'INCREMENT': ActionTokenType.INCREMENT,
+			'DECREMENT': ActionTokenType.DECREMENT,
 			'APPEND': ActionTokenType.APPEND,
 			'PREPEND': ActionTokenType.PREPEND,
-			'INSERT_AT': ActionTokenType.INSERT_AT,
-			'INSERT_AFTER': ActionTokenType.INSERT_AFTER,
-			'INSERT_BEFORE': ActionTokenType.INSERT_BEFORE,
+			'INSERT': ActionTokenType.INSERT,
 			'REMOVE': ActionTokenType.REMOVE,
 			'REMOVE_ALL': ActionTokenType.REMOVE_ALL,
 			'REMOVE_AT': ActionTokenType.REMOVE_AT,
@@ -443,13 +447,9 @@ class ActionLexer {
 			'REPLACE_ALL': ActionTokenType.REPLACE_ALL,
 			'DEDUPLICATE': ActionTokenType.DEDUPLICATE,
 			'SORT': ActionTokenType.SORT,
-			'SORT_BY': ActionTokenType.SORT_BY,
 			'MOVE': ActionTokenType.MOVE,
-			'MOVE_WHERE': ActionTokenType.MOVE_WHERE,
-			'UPDATE_WHERE': ActionTokenType.UPDATE_WHERE,
 			'MERGE': ActionTokenType.MERGE,
 			'MERGE_OVERWRITE': ActionTokenType.MERGE_OVERWRITE,
-			'CLEAR': ActionTokenType.CLEAR,
 		};
 
 		const keywordMap: Record<string, ActionTokenType> = {

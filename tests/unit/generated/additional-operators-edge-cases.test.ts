@@ -1,6 +1,6 @@
 // Auto-generated from docs/examples.md
 // Category: Additional Operators & Edge Cases
-// Generated: 2025-12-03T21:00:40.155Z
+// Generated: 2025-12-06T16:22:50.464Z
 // DO NOT EDIT MANUALLY - regenerate with: npm run generate:tests
 
 import { describe, test, expect } from 'vitest';
@@ -333,7 +333,7 @@ describe('Additional Operators & Edge Cases', () => {
     }
   ]
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
@@ -358,7 +358,7 @@ describe('Additional Operators & Edge Cases', () => {
     const expectedOutput = {
   "tasks": []
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
@@ -377,7 +377,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "INSERT_AT tags \"urgent\" AT 0";
+    const action = "FOR tags INSERT \"urgent\" AT 0";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -410,7 +410,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "INSERT_AFTER tags \"approve\" AFTER \"review\"";
+    const action = "FOR tags INSERT \"approve\" AFTER \"review\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -432,7 +432,7 @@ describe('Additional Operators & Edge Cases', () => {
     
   });
 
-  test('Example 91: INSERT_AFTER when target not found (error)', () => {
+  test('Example 91: FOR when INSERT target not found (error)', () => {
     // Input YAML
     const input = {
   "tags": [
@@ -443,7 +443,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "INSERT_AFTER tags \"followup\" AFTER \"urgent\"";
+    const action = "FOR tags INSERT \"followup\" AFTER \"urgent\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -469,7 +469,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "INSERT_BEFORE tags \"draft\" BEFORE \"review\"";
+    const action = "FOR tags INSERT \"draft\" BEFORE \"review\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -504,7 +504,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "REMOVE tags \"work\"";
+    const action = "FOR tags REMOVE \"work\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -539,7 +539,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "REPLACE tags \"old-tag\" WITH \"new-tag\"";
+    const action = "FOR tags REPLACE \"old-tag\" WITH \"new-tag\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -574,7 +574,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Rule
     const condition = "";
-    const action = "REPLACE_ALL tags \"old-tag\" WITH \"new-tag\"";
+    const action = "FOR tags REPLACE_ALL \"old-tag\" WITH \"new-tag\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);
@@ -671,7 +671,7 @@ describe('Additional Operators & Edge Cases', () => {
     const expectedOutput = {
   "status": "active"
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
@@ -758,14 +758,15 @@ describe('Additional Operators & Edge Cases', () => {
     "version": 1,
     "created": "2025-11-01",
     "updated": "2025-11-15"
-  }
+  },
+  "richMetadata": true
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
     expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
-
+    
   });
 
   test('Example 102: Exact length match', () => {
@@ -895,13 +896,14 @@ describe('Additional Operators & Edge Cases', () => {
       "status": "active",
       "priority": 3
     }
-  ]
+  ],
+  "hasActiveProjects": true
 };
-    const expectedStatus = "skipped";
+    const expectedStatus = "success";
 
     // Assertions
     expect(result.status).toBe(expectedStatus);
     expect(lenientDeepEqual(result.newData, expectedOutput)).toBe(true);
-
+    
   });
 });
