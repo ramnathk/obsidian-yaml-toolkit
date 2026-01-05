@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-05
-**38** commits in this release
+**40** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Fix coverage path: move to /docs/coverage for GitHub Pages (6387ccb)
+- ramnathk ()
 - Consolidate CI workflows and add online coverage reports (5c92f74)
 - ramnathk ()
 - Improve branch coverage for src/i18n, src/core, and src/ui (fc290ba)
