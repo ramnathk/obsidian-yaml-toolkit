@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-05
-**32** commits in this release
+**34** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Add comprehensive test coverage improvements (141 new tests) (017b387)
+- ramnathk ()
 - Fix E2E tests to expect correct modal title (ba163d2)
 - ramnathk ()
 - Fix branding: correct 'YAML Toolkit' in Obsidian UI references (fa3676e)

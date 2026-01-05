@@ -187,4 +187,64 @@ describe('Basic Actions - Full Coverage', () => {
 			expect((data as any).new.location).toBe('value');
 		});
 	});
+
+	describe('formatValue Edge Cases (lines 337-339, 361-363)', () => {
+		it('should handle undefined values in SET', () => {
+			const data = { field: 'old' };
+			const result = executeSet(data, 'field', undefined);
+
+			expect(result.success).toBe(true);
+			expect(result.modified).toBe(true);
+			expect(data.field).toBeUndefined();
+			// Change message should contain 'undefined'
+			expect(result.changes[0]).toContain('undefined');
+		});
+
+		it('should handle undefined values in ADD', () => {
+			const data = {};
+			const result = executeAdd(data, 'newField', undefined);
+
+			expect(result.success).toBe(true);
+			expect(result.modified).toBe(true);
+			expect((data as any).newField).toBeUndefined();
+			// Change message should contain 'undefined'
+			expect(result.changes[0]).toContain('undefined');
+		});
+
+		it('should handle Symbol values in SET', () => {
+			const data = { field: 'old' };
+			const symbolValue = Symbol('test');
+			const result = executeSet(data, 'field', symbolValue);
+
+			expect(result.success).toBe(true);
+			expect(result.modified).toBe(true);
+			expect(data.field).toBe(symbolValue);
+			// formatValue fallback should handle Symbol
+			expect(result.changes[0]).toBeDefined();
+		});
+
+		it('should handle BigInt values in SET', () => {
+			const data = { field: 'old' };
+			const bigIntValue = BigInt(9007199254740991);
+			const result = executeSet(data, 'field', bigIntValue);
+
+			expect(result.success).toBe(true);
+			expect(result.modified).toBe(true);
+			expect(data.field).toBe(bigIntValue);
+			// formatValue fallback should handle BigInt
+			expect(result.changes[0]).toBeDefined();
+		});
+
+		it('should handle function values in SET', () => {
+			const data = { field: 'old' };
+			const functionValue = () => 'test';
+			const result = executeSet(data, 'field', functionValue);
+
+			expect(result.success).toBe(true);
+			expect(result.modified).toBe(true);
+			expect(data.field).toBe(functionValue);
+			// formatValue fallback should handle functions
+			expect(result.changes[0]).toBeDefined();
+		});
+	});
 });
