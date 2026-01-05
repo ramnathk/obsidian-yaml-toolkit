@@ -42,7 +42,7 @@ describe('Rule Builder Modal - Integration', () => {
 	it('Modal opens with correct structure', async () => {
 		// Verify modal has required elements
 		const header = await $('h2');
-		expect(await header.getText()).toBe('YAML Rule Builder');
+		expect(await header.getText()).toBe('YAML Toolkit: Rule Builder');
 
 		const ruleNameInput = await $('#rule-name');
 		expect(await ruleNameInput.isDisplayed()).toBe(true);

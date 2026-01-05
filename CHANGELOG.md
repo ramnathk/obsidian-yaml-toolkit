@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-05
-**30** commits in this release
+**32** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Fix E2E tests to expect correct modal title (ba163d2)
+- ramnathk ()
 - Fix branding: correct 'YAML Toolkit' in Obsidian UI references (fa3676e)
 - Karthikeyan R ()
 - Fix E2E tests to always rebuild plugin before running (c5caaa1)

@@ -94,7 +94,7 @@ describe('Commands - Integration', () => {
 		expect(await modal.isDisplayed()).toBe(true);
 
 		const header = await modal.$('h2');
-		expect(await header.getText()).toBe('YAML Rule Builder');
+		expect(await header.getText()).toBe('YAML Toolkit: Rule Builder');
 
 		await screenshot('modal-opened-via-command');
 
