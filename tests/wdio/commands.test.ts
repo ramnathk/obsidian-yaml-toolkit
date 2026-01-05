@@ -66,6 +66,25 @@ describe('Commands - Integration', () => {
 		await browser.keys(['Escape']); // Close
 	});
 
+	it('Plugin name shows correctly in command palette (branding check)', async () => {
+		await openCommandPalette();
+		await searchCommand('yaml');
+		await browser.pause(500);
+
+		const body = await $('body');
+		const text = await body.getText();
+
+		// Verify branding: Should show "YAML Toolkit" NOT "YAML Toolkit for Obsidian"
+		// Inside Obsidian UI, we use short name without "for Obsidian"
+		expect(text).not.toContain('YAML Toolkit for Obsidian');
+		expect(text).toContain('YAML Toolkit');
+
+		console.log('   ✅ Plugin name displays correctly: "YAML Toolkit" (no "for Obsidian")');
+
+		await screenshot('plugin-name-branding');
+		await browser.keys(['Escape']); // Close
+	});
+
 	it('Open Rule Builder command opens modal', async () => {
 		await openCommandPalette();
 		await searchCommand('Open Rule Builder');

@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-05
-**24** commits in this release
+**26** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Add E2E test to verify plugin name branding (a637882)
+- Karthikeyan R ()
 - Trigger sync after Phase 2 repository rename (73ee9e4)
 - Karthikeyan R ()
 - Merge rebrand: YAML Manipulator → YAML Toolkit (4e02073)
