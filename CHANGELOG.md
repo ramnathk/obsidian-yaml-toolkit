@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-05
-**36** commits in this release
+**38** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Consolidate CI workflows and add online coverage reports (5c92f74)
+- ramnathk ()
 - Improve branch coverage for src/i18n, src/core, and src/ui (fc290ba)
 - ramnathk ()
 - Add comprehensive test coverage improvements (141 new tests) (017b387)
