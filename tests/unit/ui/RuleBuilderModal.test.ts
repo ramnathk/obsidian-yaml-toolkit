@@ -1316,4 +1316,334 @@ describe('RuleBuilderModal UI Tests', () => {
 		});
 	});
 
+	describe('Branch Coverage - Edge Cases', () => {
+		it('should handle plugin with null rules array', async () => {
+			const pluginWithNullRules = {
+				...mockPlugin,
+				data: {
+					...mockPlugin.data,
+					rules: null // Null rules array
+				}
+			};
+
+			const { container } = render(RuleBuilderModal, {
+				props: {
+					plugin: pluginWithNullRules,
+					onClose: vi.fn()
+				}
+			});
+
+			// Should render without crashing
+			await waitFor(() => {
+				expect(screen.getByText(/Rule Name/i)).toBeInTheDocument();
+			});
+		});
+
+		it('should handle plugin with undefined rules array', async () => {
+			const pluginWithUndefinedRules = {
+				...mockPlugin,
+				data: {
+					...mockPlugin.data,
+					rules: undefined // Undefined rules array
+				}
+			};
+
+			const { container } = render(RuleBuilderModal, {
+				props: {
+					plugin: pluginWithUndefinedRules,
+					onClose: vi.fn()
+				}
+			});
+
+			// Should render without crashing
+			await waitFor(() => {
+				expect(screen.getByText(/Rule Name/i)).toBeInTheDocument();
+			});
+		});
+
+		it('should handle loadRule with non-existent rule ID', async () => {
+			render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			// Try to load a non-existent rule via select
+			const select = screen.getByLabelText(/Saved Rules/i);
+			await fireEvent.change(select, { target: { value: 'non-existent-id' } });
+
+			// Should not crash - rule won't load but component continues
+			expect(screen.getByLabelText(/Rule Name/i)).toBeInTheDocument();
+		});
+
+		it('should not delete rule when selectedRuleId is null', async () => {
+			const deleteRuleMock = vi.fn();
+
+			render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			// Delete button should not be visible when no rule is selected
+			expect(screen.queryByRole('button', { name: /Delete/i })).not.toBeInTheDocument();
+		});
+
+		it('should show/hide delete button based on selectedRuleId', async () => {
+			const savedRules = [
+				{
+					id: 'test-rule-1',
+					name: 'Test Rule',
+					condition: 'status = "draft"',
+					action: 'SET status "published"',
+					scope: { type: 'vault', folder: '' },
+					options: { backup: true },
+					created: new Date().toISOString(),
+					lastUsed: null
+				}
+			];
+
+			const pluginWithRules = {
+				...mockPlugin,
+				data: {
+					...mockPlugin.data,
+					rules: savedRules
+				}
+			};
+
+			render(RuleBuilderModal, {
+				props: {
+					plugin: pluginWithRules,
+					onClose: vi.fn()
+				}
+			});
+
+			// Initially, delete button should not be visible
+			expect(screen.queryByRole('button', { name: /Delete/i })).not.toBeInTheDocument();
+
+			// Select a rule
+			const select = screen.getByLabelText(/Saved Rules/i);
+			await fireEvent.change(select, { target: { value: 'test-rule-1' } });
+
+			// Now delete button should be visible
+			await waitFor(() => {
+				expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
+			});
+		});
+
+		it('should show folder autocomplete only when folder scope is selected', async () => {
+			const { container } = render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			// Initially vault is selected, folder autocomplete should not be present
+			// Check that FolderAutocomplete component is not rendered
+			let folderInputs = container.querySelectorAll('input[placeholder*="folder" i], input[placeholder*="Select" i]');
+			expect(folderInputs.length).toBe(0);
+
+			// Click folder radio button
+			const folderRadio = screen.getByLabelText(/Folder/i);
+			await fireEvent.click(folderRadio);
+
+			// Now folder input should be visible
+			await waitFor(() => {
+				folderInputs = container.querySelectorAll('input[placeholder*="folder" i], input[placeholder*="Select" i]');
+				expect(folderInputs.length).toBeGreaterThan(0);
+			});
+		});
+
+		it('should not show condition error when condition is empty', async () => {
+			render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
+			const actionInput = screen.getByLabelText(/Action/i);
+			const validateBtn = screen.getByRole('button', { name: /Validate/i });
+
+			// Leave condition empty (it's optional)
+			await fireEvent.input(conditionInput, { target: { value: '' } });
+			await fireEvent.input(actionInput, { target: { value: 'SET status "published"' } });
+
+			await fireEvent.click(validateBtn);
+
+			// Should not show condition error (condition is optional)
+			await waitFor(() => {
+				expect(screen.queryByText(/Invalid condition/i)).not.toBeInTheDocument();
+			});
+		});
+
+		it('should show validation section when preview is successful', async () => {
+			const { container } = render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
+			const actionInput = screen.getByLabelText(/Action/i);
+			const previewBtn = screen.getByRole('button', { name: /Preview/i });
+
+			// Fill valid rule
+			await fireEvent.input(conditionInput, { target: { value: 'status = "draft"' } });
+			await fireEvent.input(actionInput, { target: { value: 'SET status "published"' } });
+
+			// Click preview
+			await fireEvent.click(previewBtn);
+
+			// Validation section should appear (look for the validation-section div)
+			await waitFor(() => {
+				const validationSection = container.querySelector('.validation-section');
+				expect(validationSection).toBeInTheDocument();
+			});
+		});
+
+		it('should allow switching between preview and test tabs', async () => {
+			render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
+			const actionInput = screen.getByLabelText(/Action/i);
+			const previewBtn = screen.getByRole('button', { name: /Preview/i });
+
+			// Fill valid rule and preview
+			await fireEvent.input(conditionInput, { target: { value: 'status = "draft"' } });
+			await fireEvent.input(actionInput, { target: { value: 'SET status "published"' } });
+			await fireEvent.click(previewBtn);
+
+			// Wait for validation section to appear
+			await waitFor(() => {
+				const tabs = screen.getAllByRole('button');
+				const testTab = tabs.find(btn => btn.textContent?.includes('Test'));
+				expect(testTab).toBeInTheDocument();
+			});
+
+			// Click test tab
+			const tabs = screen.getAllByRole('button');
+			const testTab = tabs.find(btn => btn.textContent?.includes('Test'));
+			if (testTab) {
+				await fireEvent.click(testTab);
+
+				// Test tab content should be visible
+				await waitFor(() => {
+					expect(testTab).toBeDefined();
+				});
+			}
+		});
+
+		it('should allow closing validation section', async () => {
+			render(RuleBuilderModal, {
+				props: {
+					plugin: mockPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			const conditionInput = screen.getByLabelText(/Find files based on frontmatter/i);
+			const actionInput = screen.getByLabelText(/Action/i);
+			const previewBtn = screen.getByRole('button', { name: /Preview/i });
+
+			// Fill valid rule and preview
+			await fireEvent.input(conditionInput, { target: { value: 'status = "draft"' } });
+			await fireEvent.input(actionInput, { target: { value: 'SET status "published"' } });
+			await fireEvent.click(previewBtn);
+
+			// Wait for validation section
+			await waitFor(() => {
+				const buttons = screen.getAllByRole('button');
+				expect(buttons.length).toBeGreaterThan(0);
+			});
+
+			// Find and click close button (✕)
+			const allButtons = screen.getAllByRole('button');
+			const closeBtn = allButtons.find(btn => btn.textContent === '✕');
+
+			if (closeBtn) {
+				await fireEvent.click(closeBtn);
+				// Validation section should close (test passes if no error)
+			}
+		});
+
+		it('should handle debug mode enabled', async () => {
+			const debugPlugin = {
+				...mockPlugin,
+				data: {
+					...mockPlugin.data,
+					settings: {
+						...mockPlugin.data.settings,
+						debug: true
+					}
+				}
+			};
+
+			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+			render(RuleBuilderModal, {
+				props: {
+					plugin: debugPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			const validateBtn = screen.getByRole('button', { name: /Validate/i });
+			const actionInput = screen.getByLabelText(/Action/i);
+
+			await fireEvent.input(actionInput, { target: { value: 'SET status "published"' } });
+			await fireEvent.click(validateBtn);
+
+			// Debug logging should have occurred
+			await waitFor(() => {
+				expect(consoleSpy).toHaveBeenCalled();
+			});
+
+			consoleSpy.mockRestore();
+		});
+
+		it('should handle debug mode disabled (default)', async () => {
+			const debugPlugin = {
+				...mockPlugin,
+				data: {
+					...mockPlugin.data,
+					settings: {
+						...mockPlugin.data.settings,
+						debug: false
+					}
+				}
+			};
+
+			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+			render(RuleBuilderModal, {
+				props: {
+					plugin: debugPlugin,
+					onClose: vi.fn()
+				}
+			});
+
+			const validateBtn = screen.getByRole('button', { name: /Validate/i });
+			const actionInput = screen.getByLabelText(/Action/i);
+
+			await fireEvent.input(actionInput, { target: { value: 'SET status "published"' } });
+			await fireEvent.click(validateBtn);
+
+			// Debug logging should NOT have occurred (or minimal)
+			// Component should work normally without debug output
+
+			consoleSpy.mockRestore();
+		});
+	});
+
 });

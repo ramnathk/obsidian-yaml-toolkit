@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-05
-**34** commits in this release
+**36** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Improve branch coverage for src/i18n, src/core, and src/ui (fc290ba)
+- ramnathk ()
 - Add comprehensive test coverage improvements (141 new tests) (017b387)
 - ramnathk ()
 - Fix E2E tests to expect correct modal title (ba163d2)

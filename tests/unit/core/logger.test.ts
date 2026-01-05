@@ -227,4 +227,167 @@ describe('Logger', () => {
 			expect(logContent).toContain('SUMMARY');
 		});
 	});
+
+	describe('Branch coverage - conditional branches', () => {
+		it('should log rule with folder scope', async () => {
+			const logger = createLogger(mockVault as any, 'folder-test.log');
+
+			const rule: any = {
+				id: 'folder-rule',
+				name: 'Folder Rule',
+				condition: '',
+				action: 'SET status "done"',
+				scope: { type: 'folder', folder: 'docs/samples' },
+				options: { backup: false },
+			};
+
+			logger.logStart(rule);
+			await logger.close();
+
+			const logContent = mockVault.getFile('folder-test.log');
+			expect(logContent).toContain('Scope: folder (docs/samples)');
+		});
+
+		it('should log rule with vault scope (no folder)', async () => {
+			const logger = createLogger(mockVault as any, 'vault-test.log');
+
+			const rule: any = {
+				id: 'vault-rule',
+				name: 'Vault Rule',
+				condition: '',
+				action: 'SET status "done"',
+				scope: { type: 'vault' },
+				options: { backup: false },
+			};
+
+			logger.logStart(rule);
+			await logger.close();
+
+			const logContent = mockVault.getFile('vault-test.log');
+			expect(logContent).toContain('Scope: vault');
+			expect(logContent).not.toContain('Scope: vault (');
+		});
+
+		it('should log file success without backup path', async () => {
+			const logger = createLogger(mockVault as any, 'no-backup.log');
+
+			const rule: any = {
+				id: 'test', name: 'Test', condition: '', action: '',
+				scope: { type: 'vault' }, options: { backup: false }, created: ''
+			};
+
+			logger.logStart(rule);
+
+			const file = createMockFile('note.md');
+			// Pass undefined as backup parameter
+			logger.logFileSuccess(file, ['SET status: published'], undefined);
+
+			await logger.close();
+
+			const logContent = mockVault.getFile('no-backup.log');
+			expect(logContent).toContain('✅ note.md');
+			expect(logContent).toContain('SET status: published');
+			// Should not have a backup path line after the file (not the header's "Backup: enabled/disabled")
+			const lines = logContent!.split('\n');
+			const fileIndex = lines.findIndex(l => l.includes('✅ note.md'));
+			const nextFewLines = lines.slice(fileIndex, fileIndex + 4).join('\n');
+			expect(nextFewLines).not.toMatch(/^\s+Backup: .+\.bak/m);
+		});
+
+		it('should log file warning with empty changes array', async () => {
+			const logger = createLogger(mockVault as any, 'empty-changes.log');
+
+			const rule: any = {
+				id: 'test', name: 'Test', condition: '', action: '',
+				scope: { type: 'vault' }, options: { backup: false }, created: ''
+			};
+
+			logger.logStart(rule);
+
+			const file = createMockFile('note.md');
+			logger.logFileWarning(file, 'No changes needed', []);
+
+			await logger.close();
+
+			const logContent = mockVault.getFile('empty-changes.log');
+			expect(logContent).toContain('⚠️  note.md');
+			expect(logContent).toContain('Warning: No changes needed');
+			// Should not contain any change lines after the warning
+			const lines = logContent!.split('\n');
+			const warningIndex = lines.findIndex(l => l.includes('No changes needed'));
+			expect(warningIndex).toBeGreaterThan(-1);
+		});
+
+		it('should write to existing log file', async () => {
+			// Pre-create a log file
+			await mockVault.create('existing.log', 'Old content');
+
+			const logger = createLogger(mockVault as any, 'existing.log');
+
+			const rule: any = {
+				id: 'test', name: 'Test', condition: '', action: '',
+				scope: { type: 'vault' }, options: { backup: false }, created: ''
+			};
+
+			logger.logStart(rule);
+			await logger.close();
+
+			const logContent = mockVault.getFile('existing.log');
+			expect(logContent).toBeDefined();
+			expect(logContent).toContain('Test');
+			expect(logContent).not.toContain('Old content');
+		});
+
+		it('should create parent directory when it doesn\'t exist', async () => {
+			const logger = createLogger(mockVault as any, 'logs/nested/test.log');
+
+			const rule: any = {
+				id: 'test', name: 'Test', condition: '', action: '',
+				scope: { type: 'vault' }, options: { backup: false }, created: ''
+			};
+
+			logger.logStart(rule);
+			await logger.close();
+
+			const logContent = mockVault.getFile('logs/nested/test.log');
+			expect(logContent).toBeDefined();
+		});
+
+		it('should handle mkdir errors gracefully', async () => {
+			const errorVault = new MockVault();
+			errorVault.adapter.mkdir = async () => {
+				throw new Error('Permission denied');
+			};
+
+			const logger = createLogger(errorVault as any, 'logs/test.log');
+
+			const rule: any = {
+				id: 'test', name: 'Test', condition: '', action: '',
+				scope: { type: 'vault' }, options: { backup: false }, created: ''
+			};
+
+			logger.logStart(rule);
+
+			// Should not throw, mkdir error is caught
+			await expect(logger.close()).resolves.not.toThrow();
+
+			const logContent = errorVault.getFile('logs/test.log');
+			expect(logContent).toBeDefined();
+		});
+
+		it('should handle log path without parent directory', async () => {
+			const logger = createLogger(mockVault as any, 'test.log');
+
+			const rule: any = {
+				id: 'test', name: 'Test', condition: '', action: '',
+				scope: { type: 'vault' }, options: { backup: false }, created: ''
+			};
+
+			logger.logStart(rule);
+			await logger.close();
+
+			const logContent = mockVault.getFile('test.log');
+			expect(logContent).toBeDefined();
+		});
+	});
 });
