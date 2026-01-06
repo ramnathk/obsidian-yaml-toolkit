@@ -1,0 +1,68 @@
+name: Support Question
+description: Get help using YAML Toolkit
+title: "[Support]: "
+labels: ["question", "support"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help? Describe what you're trying to do and where you're stuck.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to accomplish?
+      description: Describe your goal or what you need help with
+      placeholder: "I want to... but I'm not sure how to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: What approaches have you attempted? What rules did you write?
+      placeholder: |
+        I tried this rule:
+        Condition: tags contains "project"
+        Action: SET status "active"
+
+        But it's not working because...
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example YAML
+      description: Share a sample of your YAML front matter (if relevant)
+      placeholder: |
+        ---
+        title: My Note
+        tags: [project, active]
+        status: draft
+        ---
+      render: yaml
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin Version
+      description: What version of YAML Toolkit are you using?
+      placeholder: "0.1.5"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: documentation
+    attributes:
+      label: Documentation Check
+      description: Have you checked the documentation?
+      options:
+        - label: I checked the [documentation](https://ramnathk.github.io/obsidian-yaml-toolkit/)
+        - label: I searched [existing issues](https://github.com/ramnathk/obsidian-yaml-toolkit/issues)
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other details, screenshots, or context
+      placeholder: "I also noticed that..."
