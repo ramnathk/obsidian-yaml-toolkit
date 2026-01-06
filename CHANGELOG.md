@@ -7,8 +7,8 @@
 
 ### 📝 Other Changes
 
-- Fix workflow: add tag trigger for releases (2cfaadc)
+- Fix build script: allow .github for issue templates (3e64520)
 - ramnathk ()
-- Fix husky deprecation warning (6abcd86)
+- Add GitHub issue templates for public repository (35aaf04)
 - ramnathk ()
 
