@@ -1,12 +1,14 @@
 # Changelog
 
-## [1.3.3] - 2026-01-05
-**42** commits in this release
+## [1.3.3] - 2026-01-06
+**44** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Enhance documentation with comprehensive Phase 2 & 3 improvements (6619ccb)
+- ramnathk ()
 - Remove redundant ci.yml and add test-failure protection (fc193ce)
 - ramnathk ()
 - Fix coverage path: move to /docs/coverage for GitHub Pages (6387ccb)

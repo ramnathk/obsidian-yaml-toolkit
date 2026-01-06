@@ -148,7 +148,7 @@ function segmentsToPath(segments: Array<{ type: string; key?: string; index?: nu
 }
 
 /**
- * Execute an action AST on data (supports both v1.0 and v2.0 AST structures)
+ * Execute an action AST on data (supports v2.0 Hybrid Grammar AST structure)
  */
 export function executeAction(ast: ActionAST, data: any): import('../types').ActionResult {
 	// Handle v2.0 AST structure: { type: 'action', target, operation }
