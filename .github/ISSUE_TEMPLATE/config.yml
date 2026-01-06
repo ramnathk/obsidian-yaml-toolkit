@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://ramnathk.github.io/obsidian-yaml-toolkit/
+    about: Read the complete documentation for examples and guides
+  - name: 💬 Discussions
+    url: https://github.com/ramnathk/obsidian-yaml-toolkit/discussions
+    about: Ask questions and discuss ideas with the community (optional - enable if you want discussions)
