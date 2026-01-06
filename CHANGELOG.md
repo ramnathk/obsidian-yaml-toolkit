@@ -1,12 +1,14 @@
 # Changelog
 
 ## [1.3.3] - 2026-01-06
-**44** commits in this release
+**46** commits in this release
 
 
 
 ### 📝 Other Changes
 
+- Clean up obsolete documentation files (70879b1)
+- ramnathk ()
 - Enhance documentation with comprehensive Phase 2 & 3 improvements (6619ccb)
 - ramnathk ()
 - Remove redundant ci.yml and add test-failure protection (fc193ce)
