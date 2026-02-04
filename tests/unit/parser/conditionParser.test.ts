@@ -139,24 +139,50 @@ describe('Condition Parser', () => {
 		});
 	});
 
-	describe('Has operator', () => {
-		it('should parse has with string value', () => {
-			const ast = parseCondition('tags has "urgent"');
+	describe('HAS operator (prefix)', () => {
+		it('should parse HAS field (existence check)', () => {
+			const ast = parseCondition('HAS views');
 			expect(ast).toMatchObject({
 				type: 'has',
-				path: 'tags',
-				value: 'urgent',
+				path: 'views',
+				operator: 'has',
+			});
+			expect(ast.value).toBeUndefined();
+		});
+
+		it('should parse HAS nested path', () => {
+			const ast = parseCondition('HAS metadata.author');
+			expect(ast).toMatchObject({
+				type: 'has',
+				path: 'metadata.author',
 				operator: 'has',
 			});
 		});
 
-		it('should parse !has', () => {
-			const ast = parseCondition('tags !has "archived"');
+		it('should parse HAS array field', () => {
+			const ast = parseCondition('HAS tags');
 			expect(ast).toMatchObject({
 				type: 'has',
 				path: 'tags',
-				value: 'archived',
+				operator: 'has',
+			});
+		});
+
+		it('should parse NOT HAS field', () => {
+			const ast = parseCondition('NOT HAS tags');
+			expect(ast).toMatchObject({
+				type: 'has',
+				path: 'tags',
 				operator: '!has',
+			});
+		});
+
+		it('should parse HAS field with array index', () => {
+			const ast = parseCondition('HAS items[0]');
+			expect(ast).toMatchObject({
+				type: 'has',
+				path: 'items[0]',
+				operator: 'has',
 			});
 		});
 	});
@@ -249,10 +275,10 @@ describe('Condition Parser', () => {
 			});
 		});
 
-		it('should handle operator precedence: OR < AND < NOT', () => {
-			// tags has "urgent" OR priority > 5 AND status = "draft"
-			// Should parse as: tags has "urgent" OR (priority > 5 AND status = "draft")
-			const ast = parseCondition('tags has "urgent" OR priority > 5 AND status = "draft"');
+	it('should handle operator precedence: OR < AND < NOT', () => {
+			// HAS tags OR priority > 5 AND status = "draft"
+			// Should parse as: HAS tags OR (priority > 5 AND status = "draft")
+			const ast = parseCondition('HAS tags OR priority > 5 AND status = "draft"');
 			expect(ast.type).toBe('boolean');
 			if (ast.type === 'boolean') {
 				expect(ast.operator).toBe('OR');
@@ -260,8 +286,8 @@ describe('Condition Parser', () => {
 			}
 		});
 
-		it('should respect parentheses', () => {
-			const ast = parseCondition('(tags has "urgent" OR priority > 5) AND status = "draft"');
+	it('should respect parentheses', () => {
+			const ast = parseCondition('(HAS tags OR priority > 5) AND status = "draft"');
 			expect(ast.type).toBe('boolean');
 			if (ast.type === 'boolean') {
 				expect(ast.operator).toBe('AND');
@@ -310,8 +336,8 @@ describe('Condition Parser', () => {
 			}
 		});
 
-		it('should parse ANY with complex condition', () => {
-			const ast = parseCondition('ANY projects WHERE status = "active" AND tags has "urgent"');
+	it('should parse ANY with complex condition', () => {
+			const ast = parseCondition('ANY projects WHERE status = "active" AND HAS tags');
 			expect(ast.type).toBe('quantifier');
 			if (ast.type === 'quantifier') {
 				expect(ast.condition.type).toBe('boolean');
@@ -354,8 +380,8 @@ describe('Condition Parser', () => {
 	});
 
 	describe('Real-world examples from requirements', () => {
-		it('should parse: tags has "urgent" AND priority > 5', () => {
-			const ast = parseCondition('tags has "urgent" AND priority > 5');
+	it('should parse: HAS tags AND priority > 5', () => {
+			const ast = parseCondition('HAS tags AND priority > 5');
 			expect(ast.type).toBe('boolean');
 			if (ast.type === 'boolean') {
 				expect(ast.operator).toBe('AND');

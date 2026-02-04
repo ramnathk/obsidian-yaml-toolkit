@@ -127,7 +127,7 @@ describe('Complex Conditions', () => {
 };
 
     // Rule
-    const condition = "(status = \"draft\" OR status = \"pending\") AND priority > 5 AND (tags has \"urgent\" OR reviewed = true)";
+    const condition = "(status = \"draft\" OR status = \"pending\") AND priority > 5 AND (HAS tags OR reviewed = true)";
     const action = "SET escalate true";
 
     // Execute rule

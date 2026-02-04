@@ -1105,7 +1105,7 @@ describe('Complex Array-of-Objects Operations', () => {
 
     // Rule
     const condition = "";
-    const action = "FOR watchlist WHERE genres has \"sci-fi\" SET priority \"high\"";
+    const action = "FOR watchlist WHERE genres contains \"sci-fi\" SET priority \"high\"";
 
     // Execute rule
     const result = executeTestRule({ condition, action }, input);

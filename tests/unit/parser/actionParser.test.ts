@@ -561,4 +561,87 @@ describe('Action Parser', () => {
 			});
 		});
 	});
+
+	describe('Direct Element SET (Phase 2)', () => {
+		it('should parse direct element SET without WHERE clause', () => {
+			const ast = parseAction('FOR history[0] SET reviewed true');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([{ field: 'reviewed', value: true }]);
+		});
+
+		it('should parse direct element SET with negative index', () => {
+			const ast = parseAction('FOR history[-1] SET reviewed true');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([{ field: 'reviewed', value: true }]);
+		});
+
+		it('should parse direct element SET with nested path and positive indices', () => {
+			const ast = parseAction('FOR teams[0].members[1] SET badge "lead"');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([{ field: 'badge', value: 'lead' }]);
+		});
+
+		it('should parse direct element SET with nested path and negative indices', () => {
+			const ast = parseAction('FOR teams[-1].members[-1] SET badge "lead"');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([{ field: 'badge', value: 'lead' }]);
+		});
+
+		it('should parse direct element SET with multiple field updates', () => {
+			const ast = parseAction('FOR history[0] SET reviewed true, status "done", priority 5');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([
+				{ field: 'reviewed', value: true },
+				{ field: 'status', value: 'done' },
+				{ field: 'priority', value: 5 }
+			]);
+		});
+
+		it('should parse direct element SET with string value', () => {
+			const ast = parseAction('FOR tasks[2] SET title "New Task"');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([{ field: 'title', value: 'New Task' }]);
+		});
+
+		it('should parse direct element SET with number value', () => {
+			const ast = parseAction('FOR items[0] SET count 42');
+
+			expect(ast).toBeDefined();
+			expect(ast.type).toBe('action');
+			expect(ast.target.type).toBe('path');
+			expect(ast.operation.type).toBe('SET');
+			expect(ast.operation.where).toBeUndefined();
+			expect(ast.operation.updates).toEqual([{ field: 'count', value: 42 }]);
+		});
+	});
 });

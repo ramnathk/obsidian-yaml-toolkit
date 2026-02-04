@@ -276,35 +276,35 @@ describe('Condition Evaluator', () => {
 		});
 	});
 
-	describe('Has operator', () => {
-		it('should check if array has value', () => {
+describe('HAS operator (prefix)', () => {
+		it('should check if field exists', () => {
 			const data = { tags: ['work', 'urgent', 'project'] };
-			const ast = parseCondition('tags has "urgent"');
+			const ast = parseCondition('HAS tags');
 			expect(evaluateCondition(ast, data)).toBe(true);
 
-			const ast2 = parseCondition('tags has "archived"');
-			expect(evaluateCondition(ast2, data)).toBe(false);
+			const data2 = { status: 'draft' };
+			const ast2 = parseCondition('HAS tags');
+			expect(evaluateCondition(ast2, data2)).toBe(false);
 		});
 
-		it('should check if array does not have value', () => {
-			const data = { tags: ['work', 'urgent'] };
-			const ast = parseCondition('tags !has "archived"');
+		it('should check if nested field exists', () => {
+			const data = { metadata: { author: 'John' } };
+			const ast = parseCondition('HAS metadata.author');
 			expect(evaluateCondition(ast, data)).toBe(true);
 
-			const ast2 = parseCondition('tags !has "urgent"');
-			expect(evaluateCondition(ast2, data)).toBe(false);
+			const data2 = { metadata: {} };
+			const ast2 = parseCondition('HAS metadata.author');
+			expect(evaluateCondition(ast2, data2)).toBe(false);
 		});
 
-		it('should return false for non-existent array', () => {
+		it('should check if field does not exist with NOT HAS', () => {
 			const data = { status: 'draft' };
-			const ast = parseCondition('tags has "urgent"');
-			expect(evaluateCondition(ast, data)).toBe(false);
-		});
+			const ast = parseCondition('NOT HAS tags');
+			expect(evaluateCondition(ast, data)).toBe(true);
 
-		it('should return false for non-array field', () => {
-			const data = { tags: 'not-an-array' };
-			const ast = parseCondition('tags has "urgent"');
-			expect(evaluateCondition(ast, data)).toBe(false);
+			const data2 = { tags: ['work'] };
+			const ast2 = parseCondition('NOT HAS tags');
+			expect(evaluateCondition(ast2, data2)).toBe(false);
 		});
 	});
 
@@ -336,9 +336,9 @@ describe('Condition Evaluator', () => {
 			expect(evaluateCondition(ast2, data)).toBe(false);
 		});
 
-		it('should handle complex boolean expressions', () => {
+	it('should handle complex boolean expressions', () => {
 			const data = { tags: ['urgent'], priority: 3, status: 'draft' };
-			const ast = parseCondition('(tags has "urgent" OR priority > 5) AND status = "draft"');
+			const ast = parseCondition('(HAS tags OR priority > 5) AND status = "draft"');
 			expect(evaluateCondition(ast, data)).toBe(true);
 		});
 	});
@@ -432,9 +432,9 @@ describe('Condition Evaluator', () => {
 	});
 
 	describe('Real-world examples', () => {
-		it('should evaluate: tags has "urgent" AND priority > 5', () => {
+	it('should evaluate: HAS tags AND priority > 5', () => {
 			const data = { tags: ['work', 'urgent'], priority: 8 };
-			const ast = parseCondition('tags has "urgent" AND priority > 5');
+			const ast = parseCondition('HAS tags AND priority > 5');
 			expect(evaluateCondition(ast, data)).toBe(true);
 		});
 

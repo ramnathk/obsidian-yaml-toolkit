@@ -1,0 +1,1910 @@
+{
+  "examples": [
+    {
+      "id": "reference-examples-1",
+      "source": "reference/examples.md",
+      "section": "Content Management",
+      "title": "Mark Drafts for Review",
+      "input": {
+        "title": "My Note",
+        "status": "draft",
+        "tags": [
+          "project",
+          "active"
+        ]
+      },
+      "condition": "status = \"draft\" AND HAS tags",
+      "actions": [
+        "SET status \"ready-for-review\"",
+        "SET reviewed_date \"2025-11-24T21:45:00\""
+      ],
+      "output": {
+        "title": "My Note",
+        "status": "ready-for-review",
+        "tags": [
+          "project",
+          "active"
+        ],
+        "reviewed_date": "2025-11-24T21:45:00.000Z"
+      },
+      "type": "transformation",
+      "multiStep": true,
+      "lineNumber": 11
+    },
+    {
+      "id": "reference-examples-2",
+      "source": "reference/examples.md",
+      "section": "Content Management",
+      "title": "Archive Old Notes",
+      "input": {
+        "title": "Old Project",
+        "created_date": "2023-06-15T00:00:00.000Z",
+        "tags": [
+          "notes",
+          "project"
+        ]
+      },
+      "condition": "created_date < \"2024-01-01\" AND NOT tags contains \"keep\"",
+      "actions": [
+        "FOR tags APPEND \"archived\""
+      ],
+      "output": {
+        "title": "Old Project",
+        "created_date": "2023-06-15T00:00:00.000Z",
+        "tags": [
+          "notes",
+          "project",
+          "archived"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 42
+    },
+    {
+      "id": "reference-examples-3",
+      "source": "reference/examples.md",
+      "section": "Tagging Operations",
+      "title": "Add Tag to Untagged Notes",
+      "input": {
+        "title": "Untagged Note",
+        "status": "active"
+      },
+      "condition": "NOT HAS tags",
+      "actions": [
+        "SET tags [\"untagged\"]"
+      ],
+      "output": {
+        "title": "Untagged Note",
+        "status": "active",
+        "tags": [
+          "untagged"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 68
+    },
+    {
+      "id": "reference-examples-4",
+      "source": "reference/examples.md",
+      "section": "Tagging Operations",
+      "title": "Clean Up Multiple Deprecated Tags",
+      "input": {
+        "title": "Legacy Note",
+        "tags": [
+          "draft",
+          "wip",
+          "temp",
+          "project",
+          "active"
+        ]
+      },
+      "condition": "HAS tags",
+      "actions": [
+        "FOR tags REMOVE_ALL [\"draft\", \"wip\", \"temp\"]"
+      ],
+      "output": {
+        "title": "Legacy Note",
+        "tags": [
+          "project",
+          "active"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 91
+    },
+    {
+      "id": "reference-examples-5",
+      "source": "reference/examples.md",
+      "section": "Metadata Management",
+      "title": "Add Missing Status",
+      "input": {
+        "title": "New Note"
+      },
+      "condition": "NOT HAS status",
+      "actions": [
+        "SET status \"draft\"",
+        "SET created_date \"2025-11-24T22:10:00\""
+      ],
+      "output": {
+        "title": "New Note",
+        "status": "draft",
+        "created_date": "2025-11-24T22:10:00.000Z"
+      },
+      "type": "transformation",
+      "multiStep": true,
+      "lineNumber": 115
+    },
+    {
+      "id": "reference-examples-6",
+      "source": "reference/examples.md",
+      "section": "Metadata Management",
+      "title": "Update Metadata",
+      "input": {
+        "title": "Settings",
+        "custom_field": "old-value"
+      },
+      "condition": "custom_field = \"old-value\"",
+      "actions": [
+        "SET custom_field \"new-value\"",
+        "SET updated_date \"2025-11-24\""
+      ],
+      "output": {
+        "title": "Settings",
+        "custom_field": "new-value",
+        "updated_date": "2025-11-24T00:00:00.000Z"
+      },
+      "type": "transformation",
+      "multiStep": true,
+      "lineNumber": 139
+    },
+    {
+      "id": "reference-examples-7",
+      "source": "reference/examples.md",
+      "section": "Priority Management",
+      "title": "Flag High Priority",
+      "input": {
+        "title": "Critical Task",
+        "priority": 9,
+        "tags": [
+          "work",
+          "project"
+        ]
+      },
+      "condition": "priority > 7 AND NOT tags contains \"urgent\"",
+      "actions": [
+        "FOR tags APPEND \"urgent\""
+      ],
+      "output": {
+        "title": "Critical Task",
+        "priority": 9,
+        "tags": [
+          "work",
+          "project",
+          "urgent"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 166
+    },
+    {
+      "id": "reference-examples-8",
+      "source": "reference/examples.md",
+      "section": "Priority Management",
+      "title": "Reset Priorities",
+      "input": {
+        "title": "Finished Task",
+        "status": "completed",
+        "priority": 5
+      },
+      "condition": "status = \"completed\"",
+      "actions": [
+        "DELETE priority"
+      ],
+      "output": {
+        "title": "Finished Task",
+        "status": "completed"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 190
+    },
+    {
+      "id": "reference-examples-9",
+      "source": "reference/examples.md",
+      "section": "Date Operations",
+      "title": "Mark Overdue",
+      "input": {
+        "title": "Late Task",
+        "deadline": "2025-11-01T00:00:00.000Z",
+        "status": "active"
+      },
+      "condition": "HAS deadline AND deadline < \"{{today}}\" AND status != \"completed\"",
+      "actions": [
+        "SET status \"overdue\""
+      ],
+      "output": {
+        "title": "Late Task",
+        "deadline": "2025-11-01T00:00:00.000Z",
+        "status": "overdue"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 215
+    },
+    {
+      "id": "reference-examples-10",
+      "source": "reference/examples.md",
+      "section": "String Operations",
+      "title": "Strip Title Prefixes",
+      "input": {
+        "title": "Dr. John Smith",
+        "author": "Dr. Jane Doe"
+      },
+      "condition": "author contains \"Dr.\"",
+      "actions": [
+        "REPLACE author /^Dr\\.?\\s+// \"\""
+      ],
+      "output": {
+        "title": "Dr. John Smith",
+        "author": "Jane Doe"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 241
+    },
+    {
+      "id": "reference-examples-11",
+      "source": "reference/examples.md",
+      "section": "String Operations",
+      "title": "Build Processing Log",
+      "input": {
+        "title": "Research Note",
+        "notes": "Initial draft completed"
+      },
+      "condition": "HAS notes",
+      "actions": [
+        "INSERT notes \"\\n\\n---\\nReviewed: 2025-12-05\" AT -1"
+      ],
+      "output": {
+        "title": "Research Note",
+        "notes": "Initial draft completed\n\n---\nReviewed: 2025-12-05"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 285
+    },
+    {
+      "id": "reference-examples-12",
+      "source": "reference/examples.md",
+      "section": "Numeric Operations",
+      "title": "Track View Count",
+      "input": {
+        "title": "Popular Article",
+        "views": 42
+      },
+      "condition": "HAS views",
+      "actions": [
+        "INCREMENT views 1"
+      ],
+      "output": {
+        "title": "Popular Article",
+        "views": 43
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 309
+    },
+    {
+      "id": "reference-examples-13",
+      "source": "reference/examples.md",
+      "section": "Numeric Operations",
+      "title": "Initialize Missing Counter",
+      "input": {
+        "title": "New Article"
+      },
+      "condition": "NOT HAS views",
+      "actions": [
+        "INCREMENT views 1"
+      ],
+      "output": {
+        "title": "New Article",
+        "views": 1
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 331
+    },
+    {
+      "id": "reference-examples-14",
+      "source": "reference/examples.md",
+      "section": "Complex Rules",
+      "title": "Conditional Workflow",
+      "input": {
+        "title": "High Priority Item",
+        "status": "active",
+        "priority": 8,
+        "tags": [
+          "project"
+        ]
+      },
+      "condition": "(status = \"active\" OR status = \"pending\") AND priority >= 5 AND NOT tags contains \"reviewed\"",
+      "actions": [
+        "SET status \"in-review\"",
+        "SET review_date \"2025-11-24T22:10:00\"",
+        "FOR tags ADD \"reviewed\""
+      ],
+      "output": {
+        "title": "High Priority Item",
+        "status": "in-review",
+        "priority": 8,
+        "tags": [
+          "project",
+          "reviewed"
+        ],
+        "review_date": "2025-11-24T22:10:00.000Z"
+      },
+      "type": "transformation",
+      "multiStep": true,
+      "lineNumber": 354
+    },
+    {
+      "id": "reference-examples-15",
+      "source": "reference/examples.md",
+      "section": "Working with Arrays of Objects",
+      "title": "Update Specific Array Items",
+      "input": {
+        "title": "Weekly Tasks",
+        "tasks": [
+          {
+            "name": "Review PR",
+            "status": "pending",
+            "priority": 8,
+            "assignee": "alice"
+          },
+          {
+            "name": "Update documentation",
+            "status": "pending",
+            "priority": 3,
+            "assignee": "bob"
+          },
+          {
+            "name": "Fix critical bug",
+            "status": "done",
+            "priority": 9,
+            "assignee": "alice"
+          }
+        ]
+      },
+      "condition": "HAS tasks",
+      "actions": [
+        "FOR tasks WHERE status = \"pending\" AND priority >= 7 SET status \"urgent\", flagged true"
+      ],
+      "output": {
+        "title": "Weekly Tasks",
+        "tasks": [
+          {
+            "name": "Review PR",
+            "status": "urgent",
+            "priority": 8,
+            "assignee": "alice",
+            "flagged": true
+          },
+          {
+            "name": "Update documentation",
+            "status": "pending",
+            "priority": 3,
+            "assignee": "bob"
+          },
+          {
+            "name": "Fix critical bug",
+            "status": "done",
+            "priority": 9,
+            "assignee": "alice"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 397
+    },
+    {
+      "id": "reference-examples-16",
+      "source": "reference/examples.md",
+      "section": "Working with Arrays of Objects",
+      "title": "Sort Object Arrays",
+      "input": {
+        "title": "Project Tasks",
+        "tasks": [
+          {
+            "name": "Write tests",
+            "priority": 3
+          },
+          {
+            "name": "Fix security issue",
+            "priority": 9
+          },
+          {
+            "name": "Update README",
+            "priority": 1
+          },
+          {
+            "name": "Review code",
+            "priority": 7
+          }
+        ]
+      },
+      "actions": [
+        "FOR tasks SORT BY priority DESC"
+      ],
+      "output": {
+        "title": "Project Tasks",
+        "tasks": [
+          {
+            "name": "Fix security issue",
+            "priority": 9
+          },
+          {
+            "name": "Review code",
+            "priority": 7
+          },
+          {
+            "name": "Write tests",
+            "priority": 3
+          },
+          {
+            "name": "Update README",
+            "priority": 1
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 460
+    },
+    {
+      "id": "reference-examples-17",
+      "source": "reference/examples.md",
+      "section": "Working with Arrays of Objects",
+      "title": "Prioritize Specific Items",
+      "input": {
+        "title": "My Reading List",
+        "books": [
+          {
+            "title": "Casual Read",
+            "priority": "normal"
+          },
+          {
+            "title": "Important Research",
+            "priority": "high"
+          },
+          {
+            "title": "Quick Reference",
+            "priority": "low"
+          },
+          {
+            "title": "Critical Paper",
+            "priority": "high"
+          }
+        ]
+      },
+      "actions": [
+        "FOR books WHERE priority = \"high\" MOVE TO START"
+      ],
+      "output": {
+        "title": "My Reading List",
+        "books": [
+          {
+            "title": "Important Research",
+            "priority": "high"
+          },
+          {
+            "title": "Critical Paper",
+            "priority": "high"
+          },
+          {
+            "title": "Casual Read",
+            "priority": "normal"
+          },
+          {
+            "title": "Quick Reference",
+            "priority": "low"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 502
+    },
+    {
+      "id": "reference-examples-18",
+      "source": "reference/examples.md",
+      "section": "Working with Arrays of Objects",
+      "title": "Multi-Step Workflow",
+      "input": {
+        "title": "Sprint Tasks",
+        "tasks": [
+          {
+            "name": "Bug fix",
+            "status": "pending",
+            "points": 3
+          },
+          {
+            "name": "New feature",
+            "status": "in-progress",
+            "points": 8
+          },
+          {
+            "name": "Code review",
+            "status": "pending",
+            "points": 2
+          }
+        ]
+      },
+      "actions": [
+        "FOR tasks WHERE status = \"pending\" AND points <= 3 SET status \"quick-win\"",
+        "FOR tasks WHERE status = \"quick-win\" MOVE TO START",
+        "FOR tasks SORT BY points DESC"
+      ],
+      "output": {
+        "title": "Sprint Tasks",
+        "tasks": [
+          {
+            "name": "Bug fix",
+            "status": "quick-win",
+            "points": 3
+          },
+          {
+            "name": "Code review",
+            "status": "quick-win",
+            "points": 2
+          },
+          {
+            "name": "New feature",
+            "status": "in-progress",
+            "points": 8
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": true,
+      "lineNumber": 559
+    },
+    {
+      "id": "reference-examples-19",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using .length - Count and Filter",
+      "input": {
+        "title": "Popular Article",
+        "tags": [
+          "javascript",
+          "typescript",
+          "react",
+          "vue",
+          "angular",
+          "svelte",
+          "node",
+          "deno"
+        ]
+      },
+      "condition": "tags.length >= 5",
+      "actions": [
+        "FOR tags APPEND \"well-tagged\""
+      ],
+      "output": {
+        "title": "Popular Article",
+        "tags": [
+          "javascript",
+          "typescript",
+          "react",
+          "vue",
+          "angular",
+          "svelte",
+          "node",
+          "deno",
+          "well-tagged"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 637
+    },
+    {
+      "id": "reference-examples-20",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using .length - Count and Filter",
+      "input": {
+        "title": "API",
+        "status": "draft"
+      },
+      "condition": "title.length < 10 AND status = \"draft\"",
+      "actions": [
+        "FOR tags APPEND \"needs-better-title\""
+      ],
+      "output": {
+        "title": "API",
+        "status": "draft",
+        "tags": [
+          "needs-better-title"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 659
+    },
+    {
+      "id": "reference-examples-21",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using empty / !empty - Detect Empty Values",
+      "input": {
+        "title": "Note",
+        "tags": [],
+        "status": "active"
+      },
+      "condition": "tags empty",
+      "actions": [
+        "DELETE tags"
+      ],
+      "output": {
+        "title": "Note",
+        "status": "active"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 698
+    },
+    {
+      "id": "reference-examples-22",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using empty / !empty - Detect Empty Values",
+      "input": {
+        "title": "Draft",
+        "content": ""
+      },
+      "condition": "content empty AND NOT HAS published_date",
+      "actions": [
+        "FOR tags APPEND \"empty-draft\""
+      ],
+      "output": {
+        "title": "Draft",
+        "content": "",
+        "tags": [
+          "empty-draft"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 721
+    },
+    {
+      "id": "reference-examples-23",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using Type Checking - Normalize Data",
+      "input": {
+        "title": "Legacy Note",
+        "tags": "old-format-tag"
+      },
+      "condition": "tags exists AND tags !:array",
+      "actions": [
+        "SET tags [\"legacy\", \"{{fm:tags}}\"]"
+      ],
+      "output": {
+        "title": "Legacy Note",
+        "tags": [
+          "legacy",
+          "old-format-tag"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 762
+    },
+    {
+      "id": "reference-examples-24",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using Type Checking - Normalize Data",
+      "input": {
+        "title": "Broken Note",
+        "status": 1
+      },
+      "condition": "status :number",
+      "actions": [
+        "SET status \"active\""
+      ],
+      "output": {
+        "title": "Broken Note",
+        "status": "active"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 787
+    },
+    {
+      "id": "reference-examples-25",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using ANY / ALL - Query Nested Data",
+      "input": {
+        "title": "Projects Dashboard",
+        "projects": [
+          {
+            "name": "Website Redesign",
+            "status": "active",
+            "priority": 8
+          },
+          {
+            "name": "Mobile App",
+            "status": "pending",
+            "priority": 3
+          },
+          {
+            "name": "API Refactor",
+            "status": "planning",
+            "priority": 5
+          }
+        ]
+      },
+      "condition": "ANY projects WHERE status = \"active\"",
+      "actions": [
+        "FOR tags APPEND \"has-active-projects\""
+      ],
+      "output": {
+        "title": "Projects Dashboard",
+        "projects": [
+          {
+            "name": "Website Redesign",
+            "status": "active",
+            "priority": 8
+          },
+          {
+            "name": "Mobile App",
+            "status": "pending",
+            "priority": 3
+          },
+          {
+            "name": "API Refactor",
+            "status": "planning",
+            "priority": 5
+          }
+        ],
+        "tags": [
+          "has-active-projects"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 819
+    },
+    {
+      "id": "reference-examples-26",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using ANY / ALL - Query Nested Data",
+      "input": {
+        "title": "Sprint Board",
+        "tasks": [
+          {
+            "name": "Bug fix",
+            "assignee": "alice"
+          },
+          {
+            "name": "Feature work",
+            "assignee": "bob"
+          },
+          {
+            "name": "Testing",
+            "assignee": "alice"
+          }
+        ]
+      },
+      "condition": "ALL tasks WHERE assignee exists",
+      "actions": [
+        "FOR tags APPEND \"fully-assigned\"",
+        "SET urgent true"
+      ],
+      "output": {
+        "title": "Urgent Projects",
+        "urgent": true,
+        "projects": [
+          {
+            "name": "Security Patch",
+            "priority": 10,
+            "status": "active"
+          },
+          {
+            "name": "Documentation",
+            "priority": 2,
+            "status": "active"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": true,
+      "lineNumber": 860
+    },
+    {
+      "id": "reference-examples-27",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using ANY / ALL - Query Nested Data",
+      "input": {
+        "title": "Urgent Projects",
+        "projects": [
+          {
+            "name": "Security Patch",
+            "priority": 10,
+            "status": "active"
+          },
+          {
+            "name": "Documentation",
+            "priority": 2,
+            "status": "active"
+          }
+        ]
+      },
+      "condition": "ANY projects WHERE priority > 8",
+      "actions": [
+        "SET urgent true"
+      ],
+      "output": {
+        "title": "Urgent Projects",
+        "urgent": true,
+        "projects": [
+          {
+            "name": "Security Patch",
+            "priority": 10,
+            "status": "active"
+          },
+          {
+            "name": "Documentation",
+            "priority": 2,
+            "status": "active"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 880
+    },
+    {
+      "id": "reference-examples-28",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using Negative Indexing - Access from End",
+      "input": {
+        "title": "Project Tasks",
+        "tasks": [
+          {
+            "name": "Setup",
+            "status": "done"
+          },
+          {
+            "name": "Development",
+            "status": "done"
+          },
+          {
+            "name": "Testing",
+            "status": "pending"
+          }
+        ]
+      },
+      "condition": "tasks[-1].status = \"done\"",
+      "actions": [
+        "FOR history[-1] SET reviewed true"
+      ],
+      "output": {
+        "title": "Activity Log",
+        "history": [
+          {
+            "date": "2025-01-01T00:00:00.000Z",
+            "event": "Created",
+            "reviewed": false
+          },
+          {
+            "date": "2025-01-05T00:00:00.000Z",
+            "event": "Updated",
+            "reviewed": true
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 943
+    },
+    {
+      "id": "reference-examples-29",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using Negative Indexing - Access from End",
+      "input": {
+        "title": "Activity Log",
+        "history": [
+          {
+            "date": "2025-01-01T00:00:00.000Z",
+            "event": "Created",
+            "reviewed": false
+          },
+          {
+            "date": "2025-01-05T00:00:00.000Z",
+            "event": "Updated",
+            "reviewed": false
+          }
+        ]
+      },
+      "condition": "history[-1].reviewed = false",
+      "actions": [
+        "FOR history[-1] SET reviewed true"
+      ],
+      "output": {
+        "title": "Activity Log",
+        "history": [
+          {
+            "date": "2025-01-01T00:00:00.000Z",
+            "event": "Created",
+            "reviewed": false
+          },
+          {
+            "date": "2025-01-05T00:00:00.000Z",
+            "event": "Updated",
+            "reviewed": true
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 963
+    },
+    {
+      "id": "reference-examples-30",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Using Negative Indexing - Access from End",
+      "input": {
+        "title": "Tag Management",
+        "tags": [
+          "project",
+          "active",
+          "important",
+          "final"
+        ]
+      },
+      "actions": [
+        "FOR tags INSERT \"archived\" AT -2"
+      ],
+      "output": {
+        "title": "Tag Management",
+        "tags": [
+          "project",
+          "active",
+          "important",
+          "archived",
+          "final"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 997
+    },
+    {
+      "id": "reference-examples-31",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Relative Positioning - MOVE TO AFTER/BEFORE",
+      "input": {
+        "title": "Sprint Tasks",
+        "tasks": [
+          {
+            "name": "Sprint Planning",
+            "type": "planning",
+            "priority": "normal"
+          },
+          {
+            "name": "Code Review",
+            "type": "review",
+            "priority": "normal"
+          },
+          {
+            "name": "Security Patch",
+            "type": "hotfix",
+            "priority": "critical"
+          },
+          {
+            "name": "Feature Development",
+            "type": "development",
+            "priority": "normal"
+          },
+          {
+            "name": "Testing",
+            "type": "qa",
+            "priority": "low"
+          }
+        ]
+      },
+      "condition": "ANY tasks WHERE priority = \"critical\"",
+      "actions": [
+        "FOR tasks WHERE priority = \"critical\" MOVE TO AFTER type = \"planning\""
+      ],
+      "output": {
+        "title": "Sprint Tasks",
+        "tasks": [
+          {
+            "name": "Sprint Planning",
+            "type": "planning",
+            "priority": "normal"
+          },
+          {
+            "name": "Security Patch",
+            "type": "hotfix",
+            "priority": "critical"
+          },
+          {
+            "name": "Code Review",
+            "type": "review",
+            "priority": "normal"
+          },
+          {
+            "name": "Feature Development",
+            "type": "development",
+            "priority": "normal"
+          },
+          {
+            "name": "Testing",
+            "type": "qa",
+            "priority": "low"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1054
+    },
+    {
+      "id": "reference-examples-32",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Relative Positioning - MOVE TO AFTER/BEFORE",
+      "input": {
+        "title": "Release Workflow",
+        "steps": [
+          {
+            "name": "Build",
+            "status": "completed"
+          },
+          {
+            "name": "Deployment",
+            "status": "pending"
+          },
+          {
+            "name": "QA Review",
+            "status": "pending"
+          }
+        ]
+      },
+      "actions": [
+        "FOR steps WHERE name = \"QA Review\" MOVE TO BEFORE name = \"Deployment\""
+      ],
+      "output": {
+        "title": "Release Workflow",
+        "steps": [
+          {
+            "name": "Build",
+            "status": "completed"
+          },
+          {
+            "name": "QA Review",
+            "status": "pending"
+          },
+          {
+            "name": "Deployment",
+            "status": "pending"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1106
+    },
+    {
+      "id": "reference-examples-33",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Relative Positioning - MOVE TO AFTER/BEFORE",
+      "input": {
+        "title": "Documentation Tasks",
+        "items": [
+          {
+            "category": "Setup",
+            "task": "Installation"
+          },
+          {
+            "category": "Advanced",
+            "task": "Custom Config"
+          },
+          {
+            "category": "Setup",
+            "task": "Quick Start"
+          },
+          {
+            "category": "Reference",
+            "task": "API Docs"
+          },
+          {
+            "category": "Setup",
+            "task": "Prerequisites"
+          }
+        ]
+      },
+      "actions": [
+        "FOR items WHERE category = \"Setup\" MOVE TO START"
+      ],
+      "output": {
+        "title": "Documentation Tasks",
+        "items": [
+          {
+            "category": "Setup",
+            "task": "Installation"
+          },
+          {
+            "category": "Setup",
+            "task": "Quick Start"
+          },
+          {
+            "category": "Setup",
+            "task": "Prerequisites"
+          },
+          {
+            "category": "Advanced",
+            "task": "Custom Config"
+          },
+          {
+            "category": "Reference",
+            "task": "API Docs"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1138
+    },
+    {
+      "id": "reference-examples-34",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Working with Deeply Nested Data",
+      "input": {
+        "title": "User Profile",
+        "metadata": {
+          "author": {
+            "profile": {
+              "name": "Alice Johnson",
+              "verified": false,
+              "contact": {
+                "email": "alice@example.com",
+                "phone": "+1-555-0123"
+              }
+            }
+          }
+        }
+      },
+      "condition": "metadata.author.profile.verified = false",
+      "actions": [
+        "SET metadata.author.profile.verified true"
+      ],
+      "output": {
+        "title": "User Profile",
+        "metadata": {
+          "author": {
+            "profile": {
+              "name": "Alice Johnson",
+              "verified": true,
+              "contact": {
+                "email": "alice@example.com",
+                "phone": "+1-555-0123"
+              }
+            }
+          }
+        }
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1188
+    },
+    {
+      "id": "reference-examples-35",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Working with Deeply Nested Data",
+      "input": {
+        "title": "Project Management",
+        "projects": [
+          {
+            "name": "Website",
+            "phases": [
+              {
+                "name": "Design",
+                "tasks": [
+                  {
+                    "id": "T1",
+                    "title": "Wireframes",
+                    "status": "done",
+                    "assignee": "Alice"
+                  },
+                  {
+                    "id": "T2",
+                    "title": "Mockups",
+                    "status": "pending",
+                    "assignee": "Bob"
+                  }
+                ]
+              },
+              {
+                "name": "Development",
+                "tasks": [
+                  {
+                    "id": "T3",
+                    "title": "Backend API",
+                    "status": "pending",
+                    "assignee": "Alice"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "condition": "projects[0].phases[0].tasks[0].assignee = \"Alice\"",
+      "actions": [
+        "FOR projects[0].phases[0].tasks WHERE status = \"pending\" SET status \"active\", started \"{{today}}\""
+      ],
+      "output": {
+        "title": "Project Management",
+        "projects": [
+          {
+            "name": "Website",
+            "phases": [
+              {
+                "name": "Design",
+                "tasks": [
+                  {
+                    "id": "T1",
+                    "title": "Wireframes",
+                    "status": "done",
+                    "assignee": "Alice"
+                  },
+                  {
+                    "id": "T2",
+                    "title": "Mockups",
+                    "status": "active",
+                    "started": "2026-01-06",
+                    "assignee": "Bob"
+                  }
+                ]
+              },
+              {
+                "name": "Development",
+                "tasks": [
+                  {
+                    "id": "T3",
+                    "title": "Backend API",
+                    "status": "pending",
+                    "assignee": "Alice"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1224
+    },
+    {
+      "id": "reference-examples-36",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Working with Deeply Nested Data",
+      "input": {
+        "title": "API Configuration",
+        "config": {
+          "services": [
+            {
+              "name": "prod-api",
+              "region": "us-east",
+              "endpoints": [
+                {
+                  "path": "/api/v1/users",
+                  "methods": [
+                    "GET",
+                    "POST"
+                  ],
+                  "rateLimit": 1000,
+                  "auth": "required"
+                },
+                {
+                  "path": "/api/v1/posts",
+                  "methods": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE"
+                  ],
+                  "rateLimit": 500,
+                  "auth": "required"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "condition": "config.services[0].endpoints[0].rateLimit < 2000",
+      "actions": [
+        "SET config.services[0].endpoints[0].rateLimit 5000"
+      ],
+      "output": {
+        "title": "API Configuration",
+        "config": {
+          "services": [
+            {
+              "name": "prod-api",
+              "region": "us-east",
+              "endpoints": [
+                {
+                  "path": "/api/v1/users",
+                  "methods": [
+                    "GET",
+                    "POST"
+                  ],
+                  "rateLimit": 5000,
+                  "auth": "required"
+                },
+                {
+                  "path": "/api/v1/posts",
+                  "methods": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE"
+                  ],
+                  "rateLimit": 500,
+                  "auth": "required"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1283
+    },
+    {
+      "id": "reference-examples-37",
+      "source": "reference/examples.md",
+      "section": "Advanced Operators",
+      "title": "Working with Deeply Nested Data",
+      "input": {
+        "title": "Team Structure",
+        "teams": [
+          {
+            "name": "Backend",
+            "members": [
+              {
+                "name": "Alice",
+                "role": "senior",
+                "active": true
+              },
+              {
+                "name": "Bob",
+                "role": "junior",
+                "active": false
+              }
+            ]
+          },
+          {
+            "name": "Frontend",
+            "members": [
+              {
+                "name": "Charlie",
+                "role": "lead",
+                "active": true
+              }
+            ]
+          }
+        ]
+      },
+      "condition": "teams[-1].members[-1].role = \"lead\"",
+      "actions": [
+        "FOR teams[-1].members[-1] SET badge \"team-lead\""
+      ],
+      "output": {
+        "title": "Team Structure",
+        "teams": [
+          {
+            "name": "Backend",
+            "members": [
+              {
+                "name": "Alice",
+                "role": "senior",
+                "active": true
+              },
+              {
+                "name": "Bob",
+                "role": "junior",
+                "active": false
+              }
+            ]
+          },
+          {
+            "name": "Frontend",
+            "members": [
+              {
+                "name": "Charlie",
+                "role": "lead",
+                "active": true,
+                "badge": "team-lead"
+              }
+            ]
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1329
+    },
+    {
+      "id": "reference-examples-38",
+      "source": "reference/examples.md",
+      "section": "Direct Element Access",
+      "title": "Update Last Item in Array",
+      "input": {
+        "title": "Reading List",
+        "books": [
+          {
+            "title": "Book 1",
+            "read": false
+          },
+          {
+            "title": "Book 2",
+            "read": false
+          }
+        ]
+      },
+      "actions": [
+        "FOR books[-1] SET read true"
+      ],
+      "output": {
+        "title": "Reading List",
+        "books": [
+          {
+            "title": "Book 1",
+            "read": false
+          },
+          {
+            "title": "Book 2",
+            "read": true
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1401
+    },
+    {
+      "id": "reference-examples-39",
+      "source": "reference/examples.md",
+      "section": "Direct Element Access",
+      "title": "Update Nested Array Element",
+      "input": {
+        "projects": [
+          {
+            "name": "Project A",
+            "teams": [
+              {
+                "name": "Frontend",
+                "lead": "Alice"
+              },
+              {
+                "name": "Backend",
+                "lead": "Bob"
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        "FOR projects[0].teams[-1] SET lead \"Charlie\""
+      ],
+      "output": {
+        "projects": [
+          {
+            "name": "Project A",
+            "teams": [
+              {
+                "name": "Frontend",
+                "lead": "Alice"
+              },
+              {
+                "name": "Backend",
+                "lead": "Charlie"
+              }
+            ]
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1433
+    },
+    {
+      "id": "reference-examples-40",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Scalar Operations",
+      "input": {
+        "title": "Project Status",
+        "notes": "Initial draft completed"
+      },
+      "condition": "HAS notes",
+      "actions": [
+        "ADD notes \" - Updated 2025-02-04\""
+      ],
+      "output": {
+        "title": "Project Status",
+        "notes": "Initial draft completed - Updated 2025-02-04"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1471
+    },
+    {
+      "id": "reference-examples-41",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Scalar Operations",
+      "input": {
+        "title": "Task Board",
+        "priority": 8,
+        "status": "active"
+      },
+      "condition": "HAS priority",
+      "actions": [
+        "RENAME priority TO importance"
+      ],
+      "output": {
+        "title": "Task Board",
+        "importance": 8,
+        "status": "active"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1493
+    },
+    {
+      "id": "reference-examples-42",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Scalar Operations",
+      "input": {
+        "title": "Inventory",
+        "stock": 50,
+        "location": "warehouse"
+      },
+      "condition": "stock > 0",
+      "actions": [
+        "DECREMENT stock 5"
+      ],
+      "output": {
+        "title": "Inventory",
+        "stock": 45,
+        "location": "warehouse"
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1517
+    },
+    {
+      "id": "reference-examples-43",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Array Operations - Simple",
+      "input": {
+        "title": "Daily Schedule",
+        "tasks": [
+          {
+            "name": "Code review",
+            "time": "10:00"
+          },
+          {
+            "name": "Standup",
+            "time": "10:30"
+          }
+        ]
+      },
+      "actions": [
+        "FOR tasks PREPEND \"morning-standup\""
+      ],
+      "output": {
+        "title": "Daily Schedule",
+        "tasks": [
+          "morning-standup",
+          {
+            "name": "Code review",
+            "time": "10:00"
+          },
+          {
+            "name": "Standup",
+            "time": "10:30"
+          }
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1543
+    },
+    {
+      "id": "reference-examples-44",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Array Operations - Simple",
+      "input": {
+        "title": "Feature Tags",
+        "tags": [
+          "backend",
+          "frontend",
+          "critical"
+        ]
+      },
+      "actions": [
+        "FOR tags INSERT \"urgent\" AT 1"
+      ],
+      "output": {
+        "title": "Feature Tags",
+        "tags": [
+          "backend",
+          "urgent",
+          "frontend",
+          "critical"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1572
+    },
+    {
+      "id": "reference-examples-45",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Array Operations - Simple",
+      "input": {
+        "title": "Bug Report",
+        "keywords": [
+          "bug",
+          "fix",
+          "urgent",
+          "bug",
+          "critical",
+          "urgent",
+          "bug"
+        ]
+      },
+      "actions": [
+        "FOR keywords DEDUPLICATE"
+      ],
+      "output": {
+        "title": "Bug Report",
+        "keywords": [
+          "bug",
+          "fix",
+          "urgent",
+          "critical"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1592
+    },
+    {
+      "id": "reference-examples-46",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Object Operations",
+      "input": {
+        "title": "Document",
+        "metadata": {
+          "author": "Alice",
+          "created": "2025-01-15"
+        }
+      },
+      "actions": [
+        "FOR metadata MERGE {\"reviewed\": true, \"updated\": \"2025-02-04\"}"
+      ],
+      "output": {
+        "title": "Document",
+        "metadata": {
+          "author": "Alice",
+          "created": "2025-01-15",
+          "reviewed": true,
+          "updated": "2025-02-04"
+        }
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1614
+    },
+    {
+      "id": "reference-examples-47",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Object Operations",
+      "input": {
+        "title": "App Config",
+        "settings": {
+          "theme": "light",
+          "fontSize": 12,
+          "notifications": true
+        }
+      },
+      "actions": [
+        "FOR settings MERGE_OVERWRITE {\"theme\": \"dark\", \"fontSize\": 14}"
+      ],
+      "output": {
+        "title": "App Config",
+        "settings": {
+          "theme": "dark",
+          "fontSize": 14,
+          "notifications": true
+        }
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1640
+    },
+    {
+      "id": "reference-examples-48",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Condition Operations",
+      "input": {
+        "title": "Task",
+        "status": "draft",
+        "priority": 7
+      },
+      "condition": "status = \"draft\" OR status = \"pending\"",
+      "actions": [
+        "SET priority 10"
+      ],
+      "output": {
+        "title": "Task",
+        "status": "draft",
+        "priority": 10
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1668
+    },
+    {
+      "id": "reference-examples-49",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Condition Operations",
+      "input": {
+        "title": "Article",
+        "author": "Alice Johnson",
+        "content": "Complete article text here"
+      },
+      "condition": "author exists",
+      "actions": [
+        "FOR tags APPEND \"has-author\""
+      ],
+      "output": {
+        "title": "Article",
+        "author": "Alice Johnson",
+        "content": "Complete article text here",
+        "tags": [
+          "has-author"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1692
+    },
+    {
+      "id": "reference-examples-50",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Condition Operations",
+      "input": {
+        "title": "Workflow",
+        "status": "active",
+        "priority": 5
+      },
+      "condition": "status IN [\"active\", \"pending\", \"in-progress\"]",
+      "actions": [
+        "FOR tags APPEND \"in-workflow\""
+      ],
+      "output": {
+        "title": "Workflow",
+        "status": "active",
+        "priority": 5,
+        "tags": [
+          "in-workflow"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1717
+    },
+    {
+      "id": "reference-examples-51",
+      "source": "reference/examples.md",
+      "section": "Complete Feature Coverage",
+      "title": "Condition Operations",
+      "input": {
+        "title": "Team Tasks",
+        "tasks": [
+          {
+            "name": "Task 1",
+            "assignee": "alice"
+          },
+          {
+            "name": "Task 2",
+            "assignee": "bob"
+          },
+          {
+            "name": "Task 3",
+            "assignee": "charlie"
+          }
+        ]
+      },
+      "condition": "ALL tasks WHERE assignee exists",
+      "actions": [
+        "FOR tags APPEND \"fully-assigned\""
+      ],
+      "output": {
+        "title": "Team Tasks",
+        "tasks": [
+          {
+            "name": "Task 1",
+            "assignee": "alice"
+          },
+          {
+            "name": "Task 2",
+            "assignee": "bob"
+          },
+          {
+            "name": "Task 3",
+            "assignee": "charlie"
+          }
+        ],
+        "tags": [
+          "fully-assigned"
+        ]
+      },
+      "type": "transformation",
+      "multiStep": false,
+      "lineNumber": 1742
+    }
+  ],
+  "stats": {
+    "filesScanned": 1,
+    "examplesFound": 51,
+    "byFile": {
+      "reference/examples.md": 51
+    },
+    "byType": {
+      "transformation": 51,
+      "condition-test": 0,
+      "explanation": 0
+    }
+  }
+}

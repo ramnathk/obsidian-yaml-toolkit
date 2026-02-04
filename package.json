@@ -17,6 +17,7 @@
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest --coverage",
 		"test:e2e": "npm run build && node scripts/install-plugin.js && wdio run wdio.conf.js",
+		"test:docs-e2e": "npm run build && node scripts/install-plugin.js && wdio run wdio.conf.docs.js",
 		"migrate:examples": "tsx scripts/migrate-examples-to-vitepress.ts",
 		"generate:tests": "tsx tests/generators/generateFromExamples.ts",
 		"e2e:download-obsidian": "node scripts/download-obsidian.js",

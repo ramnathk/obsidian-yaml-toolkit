@@ -9,8 +9,11 @@
 	export let isLoading = false;
 	export let error = null;
 
-	// Track expanded files
-	let expandedFiles = new Set();
+	// Track expanded files using an array for reliable Svelte reactivity
+	let expandedFiles = [];
+
+	// Create a reactive set of expanded file paths for O(1) lookup
+	$: expandedSet = new Set(expandedFiles);
 
 	$: summary = {
 		success: results.filter(r => r.status === 'success').length,
@@ -24,12 +27,12 @@
 	$: isEmpty = !isLoading && results.length === 0;
 
 	function toggleExpand(filePath) {
-		if (expandedFiles.has(filePath)) {
-			expandedFiles.delete(filePath);
+		// Toggle expansion state - array reassignment triggers Svelte reactivity
+		if (expandedFiles.includes(filePath)) {
+			expandedFiles = expandedFiles.filter(f => f !== filePath);
 		} else {
-			expandedFiles.add(filePath);
+			expandedFiles = [...expandedFiles, filePath];
 		}
-		expandedFiles = expandedFiles; // Trigger reactivity
 	}
 
 	function getStatusIcon(status) {
@@ -52,7 +55,7 @@
 	}
 </script>
 
-<div class="preview-tab">
+<div class="preview-tab preview-tab-content-container" data-testid="preview-tab-content" data-testid-unique="preview-results-container">
 	{#if isLoading}
 		<div class="preview-loading">
 			<div class="spinner"></div>
@@ -101,9 +104,9 @@
 			</div>
 		</div>
 
-		<div class="preview-files">
+		<div class="preview-files" data-testid="preview-files-list">
 			{#each results as result (result.file.path)}
-				<div class="file-item">
+				<div class="file-item" data-testid="preview-file-item" data-file-path={result.file.path}>
 					<button
 						class="file-header {getStatusClass(result.status)}"
 						on:click={() => toggleExpand(result.file.path)}
@@ -111,30 +114,32 @@
 						<span class="file-status">{getStatusIcon(result.status)}</span>
 						<span class="file-path">{result.file.path}</span>
 						<span class="expand-icon">
-							{expandedFiles.has(result.file.path) ? '▼' : '▶'}
+							{expandedSet.has(result.file.path) ? '▼' : '▶'}
 						</span>
 					</button>
 
-					{#if expandedFiles.has(result.file.path)}
-						<div class="file-details">
+					{#if expandedSet.has(result.file.path)}
+						<div class="file-details" data-testid="preview-file-details">
 							{#if result.status === 'error'}
-								<div class="error-details">
+								<div class="error-details" data-testid="preview-error-details">
 									<strong>Error:</strong>
 									{result.error || 'Unknown error'}
 								</div>
 							{:else if result.status === 'skipped'}
-								<div class="skip-reason">
+								<div class="skip-reason" data-testid="preview-skip-reason">
 									<strong>Reason:</strong>
 									{result.error || 'Condition did not match'}
 								</div>
 							{:else if result.modified && result.originalData && result.newData}
-								<DiffViewer
-									originalData={result.originalData}
-									newData={result.newData}
-									changes={result.changes}
-								/>
+								<div data-testid="preview-content">
+									<DiffViewer
+										originalData={result.originalData}
+										newData={result.newData}
+										changes={result.changes}
+									/>
+								</div>
 							{:else}
-								<div class="no-changes">No changes to display</div>
+								<div class="no-changes" data-testid="preview-no-changes">No changes to display</div>
 							{/if}
 						</div>
 					{/if}

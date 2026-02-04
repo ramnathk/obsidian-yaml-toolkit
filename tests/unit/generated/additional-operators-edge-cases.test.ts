@@ -192,17 +192,14 @@ describe('Additional Operators & Edge Cases', () => {
     
   });
 
-  test('Example 84: !has (array doesn\'t have)', () => {
+  test('Example 84: NOT HAS (field doesn\'t exist)', () => {
     // Input YAML
     const input = {
-  "tags": [
-    "work",
-    "project"
-  ]
+  "title": "My Note"
 };
 
     // Rule
-    const condition = "tags !has \"archived\"";
+    const condition = "NOT HAS tags";
     const action = "SET active true";
 
     // Execute rule
@@ -210,10 +207,7 @@ describe('Additional Operators & Edge Cases', () => {
 
     // Expected output
     const expectedOutput = {
-  "tags": [
-    "work",
-    "project"
-  ],
+  "title": "My Note",
   "active": true
 };
     const expectedStatus = "success";

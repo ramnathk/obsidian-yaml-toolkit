@@ -266,6 +266,63 @@ export function pathExists(data: any, path: string): boolean {
 }
 
 /**
+ * Detect if a path points to a single element (not an array)
+ * Used to determine if direct element access can be applied
+ *
+ * @param data - Object to check
+ * @param path - Dot notation path
+ * @returns True if path resolves to a single element (not an array)
+ *
+ * @example
+ * const data = { history: [{...}, {...}] };
+ * pathPointsToElement(data, 'history[0]')   // => true (single object)
+ * pathPointsToElement(data, 'history[-1]')  // => true (single object)
+ * pathPointsToElement(data, 'history')      // => false (array)
+ * pathPointsToElement(data, 'history[0].nested') // => depends on nested value
+ */
+export function pathPointsToElement(data: any, path: string): boolean {
+	const value = resolvePath(data, path);
+
+	// If value is undefined, path doesn't exist
+	if (value === undefined) {
+		return false;
+	}
+
+	// If value is an array, it's not a single element
+	if (Array.isArray(value)) {
+		return false;
+	}
+
+	// Value exists and is not an array - it's a single element
+	return true;
+}
+
+/**
+ * Extract array index from the end of a path
+ * Used to parse direct element access syntax
+ *
+ * @param path - Dot notation path
+ * @returns Array index if path ends with [n], null otherwise
+ *
+ * @example
+ * extractArrayIndex('history[0]')        // => 0
+ * extractArrayIndex('history[-1]')       // => -1
+ * extractArrayIndex('teams[0].members[1]') // => 1 (final index)
+ * extractArrayIndex('history')           // => null
+ * extractArrayIndex('history[0].value')  // => null (doesn't end with index)
+ */
+export function extractArrayIndex(path: string): number | null {
+	// Match the final [...] pattern in the path
+	const match = path.match(/\[(-?\d+)\]$/);
+
+	if (!match || !match[1]) {
+		return null;
+	}
+
+	return parseInt(match[1], 10);
+}
+
+/**
  * Path segment types
  */
 interface PathSegment {

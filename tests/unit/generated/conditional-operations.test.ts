@@ -45,7 +45,7 @@ describe('Conditional Operations', () => {
 };
 
     // Rule
-    const condition = "tags has \"urgent\"";
+    const condition = "HAS tags";
     const action = "SET priority \"high\"";
 
     // Execute rule

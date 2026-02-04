@@ -100,17 +100,17 @@ describe('i18n', () => {
 	describe('t (translation helper)', () => {
 		it('should translate simple keys', () => {
 			const result = t('notices.ruleSaved');
-			expect(result).toBe('notices.ruleSaved');
+			expect(result).toBe('Rule saved successfully');
 		});
 
 		it('should handle interpolation values', () => {
-			const result = t('message.count', { count: 5 });
-			expect(result).toBe('message.count'); // Simple mock doesn't do actual translation
+			const result = t('notices.processing', { count: 5 });
+			expect(result).toContain('5'); // Placeholder replaced with actual count
 		});
 
 		it('should handle missing values gracefully', () => {
-			const result = t('some.key');
-			expect(result).toBe('some.key');
+			const result = t('some.nonexistent.key');
+			expect(result).toBe('some.nonexistent.key'); // Missing keys return as-is
 		});
 	});
 });

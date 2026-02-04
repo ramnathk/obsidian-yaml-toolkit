@@ -5,6 +5,7 @@
 
 import { render, fireEvent, screen } from '@testing-library/svelte';
 import { describe, it, expect } from 'vitest';
+import { tick } from 'svelte';
 import PreviewTab from '../../../src/ui/components/PreviewTab.svelte';
 import type { FileResult } from '../../../src/types';
 
@@ -251,6 +252,7 @@ describe('PreviewTab Component', () => {
 			// Click to expand file details
 			const fileHeader = container.querySelector('.file-header');
 			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
 
 			// Now changes should be visible
 			expect(screen.getByText(/Set status to "published"/i)).toBeInTheDocument();
@@ -272,7 +274,7 @@ describe('PreviewTab Component', () => {
 				}
 			];
 
-			const { container } = render(PreviewTab, {
+			const { container, component } = render(PreviewTab, {
 				props: {
 					results,
 					isLoading: false,
@@ -290,6 +292,8 @@ describe('PreviewTab Component', () => {
 
 			// Click to expand
 			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
+			await new Promise(resolve => setTimeout(resolve, 10)); // Extra wait
 
 			// Now file details should be visible
 			fileDetails = container.querySelector('.file-details');
@@ -297,10 +301,148 @@ describe('PreviewTab Component', () => {
 
 			// Click again to collapse
 			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
+			await new Promise(resolve => setTimeout(resolve, 10)); // Extra wait
 
 			// File details should be hidden again
 			fileDetails = container.querySelector('.file-details');
 			expect(fileDetails).toBeFalsy();
+		});
+
+		it('should expand file details with test ID for E2E compatibility', async () => {
+			const results: FileResult[] = [
+				{
+					file: { path: 'docs-examples/test.md', basename: 'test', name: 'test.md' } as any,
+					status: 'success',
+					modified: true,
+					changes: ['Set status to "published"'],
+					originalData: { status: 'draft' },
+					newData: { status: 'published' },
+					duration: 10
+				}
+			];
+
+			const { container } = render(PreviewTab, {
+				props: {
+					results,
+					isLoading: false,
+					error: null
+				}
+			});
+
+			// Verify file item has correct test ID and data attribute
+			const fileItem = container.querySelector('[data-testid="preview-file-item"]');
+			expect(fileItem).toBeTruthy();
+			expect(fileItem?.getAttribute('data-file-path')).toBe('docs-examples/test.md');
+
+			// File details should not be visible initially
+			let fileDetails = container.querySelector('[data-testid="preview-file-details"]');
+			expect(fileDetails).toBeFalsy();
+
+			// Click file header to expand
+			const fileHeader = container.querySelector('.file-header');
+			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
+
+			// File details should now be visible with test ID
+			fileDetails = container.querySelector('[data-testid="preview-file-details"]');
+			expect(fileDetails).toBeTruthy();
+
+			// Preview content should be visible for success + modified files
+			const previewContent = container.querySelector('[data-testid="preview-content"]');
+			expect(previewContent).toBeTruthy();
+		});
+
+		it('should show skip reason when file is skipped', async () => {
+			const results: FileResult[] = [
+				{
+					file: { path: 'skipped.md' } as any,
+					status: 'skipped',
+					modified: false,
+					changes: [],
+					error: 'Condition did not match',
+					duration: 2
+				}
+			];
+
+			const { container } = render(PreviewTab, {
+				props: {
+					results,
+					isLoading: false,
+					error: null
+				}
+			});
+
+			// Expand file
+			const fileHeader = container.querySelector('.file-header');
+			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
+
+			// Should show skip reason with test ID
+			const skipReason = container.querySelector('[data-testid="preview-skip-reason"]');
+			expect(skipReason).toBeTruthy();
+			expect(skipReason?.textContent).toContain('Condition did not match');
+		});
+
+		it('should show error details when file has error', async () => {
+			const results: FileResult[] = [
+				{
+					file: { path: 'error.md' } as any,
+					status: 'error',
+					modified: false,
+					changes: [],
+					error: 'Parse error: Invalid YAML syntax',
+					duration: 3
+				}
+			];
+
+			const { container } = render(PreviewTab, {
+				props: {
+					results,
+					isLoading: false,
+					error: null
+				}
+			});
+
+			// Expand file
+			const fileHeader = container.querySelector('.file-header');
+			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
+
+			// Should show error details with test ID
+			const errorDetails = container.querySelector('[data-testid="preview-error-details"]');
+			expect(errorDetails).toBeTruthy();
+			expect(errorDetails?.textContent).toContain('Invalid YAML syntax');
+		});
+
+		it('should show no-changes message for unmodified success files', async () => {
+			const results: FileResult[] = [
+				{
+					file: { path: 'unchanged.md' } as any,
+					status: 'success',
+					modified: false,
+					changes: [],
+					duration: 5
+				}
+			];
+
+			const { container } = render(PreviewTab, {
+				props: {
+					results,
+					isLoading: false,
+					error: null
+				}
+			});
+
+			// Expand file
+			const fileHeader = container.querySelector('.file-header');
+			await fireEvent.click(fileHeader as Element);
+			await tick(); // Wait for Svelte to update DOM
+
+			// Should show no-changes message with test ID
+			const noChanges = container.querySelector('[data-testid="preview-no-changes"]');
+			expect(noChanges).toBeTruthy();
+			expect(noChanges?.textContent).toContain('No changes to display');
 		});
 	});
 

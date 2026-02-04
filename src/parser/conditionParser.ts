@@ -106,6 +106,24 @@ class ConditionParser {
 	 */
 	private parseNot(): ConditionAST {
 		if (this.current().type === TokenType.NOT) {
+			// Check for NOT HAS pattern
+			if (this.peek()?.type === TokenType.HAS) {
+				this.advance(); // consume NOT
+				this.advance(); // consume HAS
+				const path = this.parsePath();
+				const value = this.tryParseValue();
+				const node: HasNode = {
+					type: 'has',
+					path,
+					operator: '!has',
+				};
+				if (value !== undefined) {
+					node.value = value;
+				}
+				return node;
+			}
+
+			// Regular NOT
 			this.advance(); // consume NOT
 			const operand = this.parseNot(); // Allow chaining: NOT NOT condition
 			return {
@@ -135,6 +153,22 @@ class ConditionParser {
 		// Quantifiers: ANY/ALL
 		if (token.type === TokenType.ANY || token.type === TokenType.ALL) {
 			return this.parseQuantifier();
+		}
+
+		// HAS operator (prefix): HAS path [value]
+		if (token.type === TokenType.HAS) {
+			this.advance(); // consume HAS
+			const path = this.parsePath();
+			const value = this.tryParseValue();
+			const node: HasNode = {
+				type: 'has',
+				path,
+				operator: 'has',
+			};
+			if (value !== undefined) {
+				node.value = value;
+			}
+			return node;
 		}
 
 		// Path-based expressions
@@ -192,30 +226,6 @@ class ConditionParser {
 			};
 		}
 
-		// Has operator: path has value / path !has value
-		if (token.type === TokenType.HAS) {
-			this.advance();
-			const value = this.parseValue();
-			return {
-				type: 'has',
-				path,
-				value,
-				operator: 'has',
-			};
-		}
-
-		if (token.type === TokenType.EXCLAMATION && this.peek()?.type === TokenType.HAS) {
-			this.advance(); // consume !
-			this.advance(); // consume has
-			const value = this.parseValue();
-			return {
-				type: 'has',
-				path,
-				value,
-				operator: '!has',
-			};
-		}
-
 		// Type check: path :type / path !:type
 		if (this.isTypeCheck(token.type)) {
 			const typeCheck = this.parseTypeCheckOperator(token.type);
@@ -249,6 +259,18 @@ class ConditionParser {
 				type: 'contains',
 				path,
 				value,
+			};
+		}
+
+		// HAS operator (infix): path HAS value
+		if (token.type === TokenType.HAS) {
+			this.advance();
+			const value = this.parseValue();
+			return {
+				type: 'has',
+				path,
+				value,
+				operator: 'has',
 			};
 		}
 
@@ -313,7 +335,7 @@ class ConditionParser {
 					throw new ParserError('Expected identifier after dot', next);
 				}
 			}
-			// Array index: [n] or [*]
+			// Array index: [n] or [*] (lexer handles negative numbers like -1 as single NUMBER token)
 			else if (token.type === TokenType.LBRACKET) {
 				this.advance();
 				const indexToken = this.current();
@@ -450,6 +472,24 @@ class ConditionParser {
 	 */
 	private parseWhereNot(outerArray: string): ConditionAST {
 		if (this.current().type === TokenType.NOT) {
+			// Check for NOT HAS pattern
+			if (this.peek()?.type === TokenType.HAS) {
+				this.advance(); // consume NOT
+				this.advance(); // consume HAS
+				const path = this.parsePath();
+				const value = this.tryParseValue();
+				const node: HasNode = {
+					type: 'has',
+					path,
+					operator: '!has',
+				};
+				if (value !== undefined) {
+					node.value = value;
+				}
+				return node;
+			}
+
+			// Regular NOT
 			this.advance(); // consume NOT
 			const operand = this.parseWhereNot(outerArray); // Allow chaining: NOT NOT condition
 			return {
@@ -479,6 +519,22 @@ class ConditionParser {
 		// Allow nested quantifiers (for different arrays)
 		if (token.type === TokenType.ANY || token.type === TokenType.ALL) {
 			return this.parseQuantifier();
+		}
+
+		// HAS operator (prefix): HAS path [value]
+		if (token.type === TokenType.HAS) {
+			this.advance(); // consume HAS
+			const path = this.parsePath();
+			const value = this.tryParseValue();
+			const node: HasNode = {
+				type: 'has',
+				path,
+				operator: 'has',
+			};
+			if (value !== undefined) {
+				node.value = value;
+			}
+			return node;
 		}
 
 		// Path-based expressions (comparisons, checks, etc.)
@@ -521,6 +577,28 @@ class ConditionParser {
 		}
 
 		throw new ParserError('Expected value', token);
+	}
+
+	/**
+	 * Try to parse a value, returning undefined if not available
+	 * Used for optional values in HAS conditions (e.g., "HAS field" vs "HAS field value")
+	 */
+	private tryParseValue(): any {
+		const token = this.current();
+
+		// Check if current token is a value type
+		if (
+			token.type === TokenType.STRING ||
+			token.type === TokenType.NUMBER ||
+			token.type === TokenType.BOOLEAN ||
+			token.type === TokenType.NULL ||
+			token.type === TokenType.REGEX
+		) {
+			return this.parseValue();
+		}
+
+		// Not a value, return undefined (for optional value cases like "HAS tags")
+		return undefined;
 	}
 
 	/**

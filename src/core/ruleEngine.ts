@@ -6,7 +6,7 @@
  */
 
 import { App, TFile } from 'obsidian';
-import { FileResult, Rule, ActionAST, ConditionAST } from '../types';
+import { FileResult, Rule, ActionAST, ConditionAST, DirectElementSetAction } from '../types';
 import { readFrontmatter } from '../yaml/yamlProcessor';
 import { parseCondition } from '../parser/conditionParser';
 import { parseAction } from '../parser/actionParser';
@@ -30,6 +30,7 @@ import {
 	executeMove,
 	executeMoveWhere,
 	executeUpdateWhere,
+	executeDirectElementSet,
 } from '../actions/arrayActions';
 import { executeMerge, executeMergeOverwrite } from '../actions/objectActions';
 
@@ -48,6 +49,10 @@ export async function executeRule(app: App, rule: Rule, file: TFile): Promise<Fi
 		// Read frontmatter
 		const { data, content } = await readFrontmatter(app, file);
 		const originalData = JSON.parse(JSON.stringify(data)); // Deep copy for comparison
+
+		// DEBUG
+		console.log('[EXECUTE_RULE_DEBUG] File:', file.path);
+		console.log('[EXECUTE_RULE_DEBUG] Initial data:', data);
 
 		// Evaluate condition (if present)
 		if (rule.condition && rule.condition.trim().length > 0) {
@@ -77,7 +82,11 @@ export async function executeRule(app: App, rule: Rule, file: TFile): Promise<Fi
 
 		// Parse and execute action
 		const actionAST = parseAction(resolvedAction);
+		console.log('[EXECUTE_RULE_DEBUG] Before action, data === originalData?', data === originalData);
+		console.log('[EXECUTE_RULE_DEBUG] Executing action:', rule.action);
 		const actionResult = executeAction(actionAST, data);
+		console.log('[EXECUTE_RULE_DEBUG] Action result:', { success: actionResult.success, modified: actionResult.modified, changes: actionResult.changes });
+		console.log('[EXECUTE_RULE_DEBUG] After action, data:', data);
 
 		if (!actionResult.success) {
 			return {
@@ -151,11 +160,21 @@ function segmentsToPath(segments: Array<{ type: string; key?: string; index?: nu
  * Execute an action AST on data (supports v2.0 Hybrid Grammar AST structure)
  */
 export function executeAction(ast: ActionAST, data: any): import('../types').ActionResult {
+	// Handle Phase 2 Direct Element SET: { type: 'DIRECT_ELEMENT_SET', path, updates }
+	if ((ast as any).type === 'DIRECT_ELEMENT_SET') {
+		const action = ast as DirectElementSetAction;
+		return executeDirectElementSet(data, action.path,
+			Object.entries(action.updates).map(([field, value]) => ({ field, value }))
+		);
+	}
+
 	// Handle v2.0 AST structure: { type: 'action', target, operation }
 	if ((ast as any).type === 'action') {
 		const v2ast = ast as any;
 		const operation = v2ast.operation;
 		const path = segmentsToPath(v2ast.target.segments);
+
+		console.log('[EXECUTE_ACTION_DEBUG]', { operationType: operation.type, path, hasWhere: !!operation.where, target: operation.to });
 
 		switch (operation.type) {
 			case 'SET':
@@ -163,6 +182,9 @@ export function executeAction(ast: ActionAST, data: any): import('../types').Act
 				if (operation.where && operation.updates) {
 					// Conditional SET uses UPDATE_WHERE: FOR items WHERE ... SET field value
 					return executeUpdateWhere(data, path, operation.where, operation.updates);
+				} else if (!operation.where && operation.updates) {
+					// Direct element SET: FOR array[index] SET field value
+					return executeDirectElementSet(data, path, operation.updates);
 				}
 				return executeSet(data, path, operation.value);
 			case 'ADD':
@@ -219,6 +241,7 @@ export function executeAction(ast: ActionAST, data: any): import('../types').Act
 			case 'MOVE':
 				// Check if conditional (has 'where') or index-based (has 'from')
 				if (operation.where) {
+					console.log('[EXECUTE_ACTION_DEBUG] Calling executeMoveWhere with:', { path, whereType: operation.where?.type, target: operation.to });
 					return executeMoveWhere(data, path, operation.where, operation.to);
 				}
 				return executeMove(data, path, operation.from, operation.to);

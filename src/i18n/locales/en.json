@@ -156,6 +156,10 @@
       "question": "Continue anyway?"
     }
   },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
   "status": {
     "success": "Success",
     "warning": "Warning",

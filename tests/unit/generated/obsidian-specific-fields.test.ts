@@ -76,7 +76,7 @@ describe('Obsidian-Specific Fields', () => {
 };
 
     // Rule - NOTE: Multiple SETs executed sequentially
-    // (Multi-field SET in single statement not yet implemented)
+    // Multi-action syntax (comma-separated actions) was removed per commit 79cd20d
     const condition = "project exists";
 
     // Execute multiple SET operations

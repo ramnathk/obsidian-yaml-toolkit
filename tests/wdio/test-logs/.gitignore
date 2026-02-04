@@ -1,0 +1,11 @@
+# Ignore all log files
+*.log
+
+# Ignore JSON summary files
+*.json
+
+# Keep analyze-logs.js script
+!analyze-logs.js
+
+# Keep .gitignore
+!.gitignore

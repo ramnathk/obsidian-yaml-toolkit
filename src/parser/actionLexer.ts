@@ -134,9 +134,22 @@ class ActionLexer {
 			// Handle [ - could be array indexing or array literal
 			if (char === '[') {
 				const nextChar = this.peek();
-				// If next char is a digit, it's array indexing (e.g., field[0])
+				// If next char is a digit or minus sign (for negative indices), it's array indexing
+				// e.g., field[0] or field[-1]
 				// Otherwise, it's an array literal (e.g., ["value1", "value2"])
-				const isArrayIndexing = nextChar !== null && this.isDigit(nextChar);
+				let isArrayIndexing = false;
+
+				if (nextChar !== null) {
+					if (this.isDigit(nextChar)) {
+						// Positive index: [0], [123]
+						isArrayIndexing = true;
+					} else if (nextChar === '-') {
+						// Negative index: [-1], [-2]
+						// Check if there's a digit after the minus sign
+						const charAfterMinus = this.peek(2);
+						isArrayIndexing = charAfterMinus !== null && this.isDigit(charAfterMinus);
+					}
+				}
 
 				if (isArrayIndexing) {
 					// Array indexing: create LBRACKET token

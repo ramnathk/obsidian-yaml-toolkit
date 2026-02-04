@@ -31,13 +31,51 @@ export function initI18n() {
  * @example
  * import { t } from './i18n';
  * const message = t('notices.ruleSaved');
+ * const processed = t('notices.processing', { count: 5 });
  *
  * @param key - Translation key (e.g., 'notices.ruleSaved')
  * @param values - Optional interpolation values (e.g., { count: 5 })
- * @returns Translated string
+ * @returns Translated string with interpolated values
  */
 export function t(key: string, values?: Record<string, any>): string {
-	return get(_)(key, values);
+	// Get the translated string by navigating the key path
+	// e.g., 'notices.processing' -> enTranslations['notices']['processing']
+	const keyParts = key.split('.');
+	let message: any = enTranslations;
+
+	for (const part of keyParts) {
+		message = message[part];
+		if (!message) {
+			console.warn(`[i18n] Missing translation key: ${key}`);
+			return key; // Return the key itself as fallback
+		}
+	}
+
+	// Convert to string if needed
+	if (typeof message !== 'string') {
+		console.warn(`[i18n] Translation for ${key} is not a string`);
+		return String(message);
+	}
+
+	// If no values provided, return the translated string as-is
+	if (!values || Object.keys(values).length === 0) {
+		return message;
+	}
+
+	// Manually interpolate values into the message
+	// Replace {variableName} with the corresponding value
+	let result = message;
+	for (const [varName, value] of Object.entries(values)) {
+		// Convert value to string, handling undefined/null cases
+		const stringValue = value === undefined || value === null ? '' : String(value);
+		// Replace all occurrences of {variableName} with the stringified value
+		const placeholder = `{${varName}}`;
+		if (result.includes(placeholder)) {
+			result = result.split(placeholder).join(stringValue);
+		}
+	}
+
+	return result;
 }
 
 /**

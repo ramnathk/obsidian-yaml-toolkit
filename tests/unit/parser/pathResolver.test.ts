@@ -8,7 +8,9 @@ import {
 	setPath,
 	deletePath,
 	pathExists,
-	parsePathSegments
+	parsePathSegments,
+	pathPointsToElement,
+	extractArrayIndex
 } from '../../../src/parser/pathResolver';
 
 describe('Path Resolver - Comprehensive', () => {
@@ -252,6 +254,118 @@ describe('Path Resolver - Comprehensive', () => {
 			const data = { items: ['a', 'b'] };
 			expect(pathExists(data, 'items[10]')).toBe(false);
 			expect(pathExists(data, 'items[-10]')).toBe(false);
+		});
+	});
+
+	describe('Element detection utilities (Phase 2)', () => {
+		describe('pathPointsToElement', () => {
+			it('should return true when path points to array element (positive index)', () => {
+				const data = {
+					history: [
+						{ date: '2026-01-01', reviewed: false },
+						{ date: '2026-01-02', reviewed: false }
+					]
+				};
+				expect(pathPointsToElement(data, 'history[0]')).toBe(true);
+				expect(pathPointsToElement(data, 'history[1]')).toBe(true);
+			});
+
+			it('should return true when path points to array element (negative index)', () => {
+				const data = {
+					history: [
+						{ date: '2026-01-01', reviewed: false },
+						{ date: '2026-01-02', reviewed: false }
+					]
+				};
+				expect(pathPointsToElement(data, 'history[-1]')).toBe(true);
+				expect(pathPointsToElement(data, 'history[-2]')).toBe(true);
+			});
+
+			it('should return false when path points to array (no index)', () => {
+				const data = {
+					history: [
+						{ date: '2026-01-01', reviewed: false },
+						{ date: '2026-01-02', reviewed: false }
+					]
+				};
+				expect(pathPointsToElement(data, 'history')).toBe(false);
+			});
+
+			it('should return false when path returns array', () => {
+				const data = {
+					nested: {
+						items: [[1, 2], [3, 4]]
+					}
+				};
+				expect(pathPointsToElement(data, 'nested.items[0]')).toBe(false);
+			});
+
+			it('should handle nested paths with indices', () => {
+				const data = {
+					teams: [
+						{
+							name: 'Alpha',
+							members: [
+								{ id: 1, name: 'Alice' },
+								{ id: 2, name: 'Bob' }
+							]
+						}
+					]
+				};
+				expect(pathPointsToElement(data, 'teams[0].members[0]')).toBe(true);
+				expect(pathPointsToElement(data, 'teams[0].members[-1]')).toBe(true);
+			});
+
+			it('should return false for missing paths', () => {
+				const data = {
+					history: [{ date: '2026-01-01' }]
+				};
+				expect(pathPointsToElement(data, 'missing[0]')).toBe(false);
+			});
+
+			it('should return true for nested paths without final index', () => {
+				const data = {
+					items: [
+						{ value: 'first' },
+						{ value: 'second' }
+					]
+				};
+				expect(pathPointsToElement(data, 'items[0].value')).toBe(true);
+			});
+		});
+
+		describe('extractArrayIndex', () => {
+			it('should extract positive array index from path', () => {
+				expect(extractArrayIndex('history[0]')).toBe(0);
+				expect(extractArrayIndex('items[5]')).toBe(5);
+				expect(extractArrayIndex('array[999]')).toBe(999);
+			});
+
+			it('should extract negative array index from path', () => {
+				expect(extractArrayIndex('history[-1]')).toBe(-1);
+				expect(extractArrayIndex('items[-2]')).toBe(-2);
+				expect(extractArrayIndex('array[-999]')).toBe(-999);
+			});
+
+			it('should return null when path has no index', () => {
+				expect(extractArrayIndex('history')).toBeNull();
+				expect(extractArrayIndex('nested.path')).toBeNull();
+			});
+
+			it('should return null for nested paths without final index', () => {
+				expect(extractArrayIndex('teams[0].members')).toBeNull();
+				expect(extractArrayIndex('history[5].value')).toBeNull();
+			});
+
+			it('should extract index from end of nested path', () => {
+				expect(extractArrayIndex('teams[0].members[1]')).toBe(1);
+				expect(extractArrayIndex('nested.deep.array[-1]')).toBe(-1);
+			});
+
+			it('should handle edge cases correctly', () => {
+				expect(extractArrayIndex('[0]')).toBe(0);
+				expect(extractArrayIndex('path[0].nested[1]')).toBe(1);
+			});
 		});
 	});
 });

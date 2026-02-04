@@ -183,7 +183,7 @@ export interface EmptyCheckNode {
 export interface HasNode {
 	type: 'has';
 	path: string;
-	value: any;
+	value?: any;  // Optional: undefined means check existence
 	operator: 'has' | '!has';
 }
 
@@ -244,6 +244,7 @@ export type ActionAST =
 	| MoveAction
 	| MoveWhereAction
 	| UpdateWhereAction
+	| DirectElementSetAction
 	| MergeAction
 	| MergeOverwriteAction;
 
@@ -251,8 +252,6 @@ export interface SetAction {
 	op: 'SET';
 	path: string;
 	value: any;
-	// Optional: for multi-field SET commands like "SET field1 val1, field2 val2"
-	fields?: Array<{ path: string; value: any }>;
 }
 
 export interface AddAction {
@@ -393,6 +392,13 @@ export interface UpdateWhereAction {
 	path: string;
 	condition: ConditionAST;
 	updates: Array<{ field: string; value: any }>;
+}
+
+// Internal representation for: FOR path[index] SET field value (Phase 2 - Direct Element Access)
+export interface DirectElementSetAction {
+	type: 'DIRECT_ELEMENT_SET';
+	path: string;
+	updates: Record<string, any>;
 }
 
 export interface MergeAction {

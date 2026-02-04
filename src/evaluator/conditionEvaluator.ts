@@ -264,15 +264,22 @@ function evaluateEmptyCheck(node: EmptyCheckNode, data: any): boolean {
  * Evaluate has operator: array has value
  */
 function evaluateHas(node: HasNode, data: any): boolean {
-	const array = resolvePath(data, node.path);
+	const value = resolvePath(data, node.path);
 
+	// Case 1: No value specified - check field existence (e.g., "HAS tags")
+	if (node.value === undefined) {
+		const exists = value !== undefined;
+		return node.operator === 'has' ? exists : !exists;
+	}
+
+	// Case 2: Value specified - check if array contains value (e.g., "HAS tags 'important'")
 	// Non-existent or non-array: has = false
-	if (!Array.isArray(array)) {
+	if (!Array.isArray(value)) {
 		return node.operator === 'has' ? false : true;
 	}
 
 	// Check if array contains the value
-	const hasValue = array.includes(node.value);
+	const hasValue = value.includes(node.value);
 
 	return node.operator === 'has' ? hasValue : !hasValue;
 }

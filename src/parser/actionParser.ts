@@ -30,6 +30,7 @@ import {
 	MoveAction,
 	MoveWhereAction,
 	UpdateWhereAction,
+	DirectElementSetAction,
 	MergeAction,
 	MergeOverwriteAction,
 	ConditionAST,
@@ -526,8 +527,9 @@ class ActionParser {
 
 	/**
 	 * FOR path WHERE condition SET field value [, field2 value2, ...]
+	 * Also handles: FOR path[index] SET field value (direct element access, Phase 2)
 	 */
-	private parseConditionalSet(path: string, condition: ConditionAST | undefined): UpdateWhereAction {
+	private parseConditionalSet(path: string, condition: ConditionAST | undefined): UpdateWhereAction | any {
 		if (!condition) {
 			// Check if WHERE appears later in the token stream (wrong position)
 			let whereFoundLater = false;
@@ -562,9 +564,13 @@ class ActionParser {
 				}
 			}
 
-			// When FOR is used with SET but no WHERE, determine if this looks like:
+			// When FOR is used with SET but no WHERE, determine if this is:
 			// 1. Scalar operation: FOR title SET "value" → suggest removing FOR
-			// 2. Array operation: FOR tasks SET priority 10 → suggest adding WHERE
+			// 2. Direct element access: FOR tasks[0] SET field value → allow it (no WHERE needed)
+			// 3. Array operation: FOR tasks SET priority 10 → suggest adding WHERE
+
+			// Check if path ends with array index (e.g., "tasks[0]" or "teams[-1].members[0]")
+			const hasArrayIndex = this.pathHasArrayIndex(path);
 
 			const firstToken = this.peek(1); // token after SET
 			const secondToken = this.peek(2); // token after first
@@ -588,12 +594,66 @@ class ActionParser {
 					`FOR keyword not allowed for scalar operations. Use: SET ${path} ${valueStr}`,
 					this.current()
 				);
-			} else {
+			} else if (!hasArrayIndex) {
 				// Looks like array operation missing WHERE: FOR tasks SET priority 10
 				throw new ActionParserError(
 					`SET on array requires WHERE clause to specify which items to update. Specify which items: FOR ${path} WHERE status = "pending" SET priority 10`,
 					this.current()
 				);
+			}
+			// If hasArrayIndex is true, allow SET without WHERE (direct element access)
+			// Return action structure for Phase 2 direct element access
+			if (!condition && this.pathHasArrayIndex(path)) {
+				this.advance(); // consume SET
+
+				// Check for WHERE immediately after SET (wrong position)
+				if (this.current().type === ActionTokenType.WHERE) {
+					throw new ActionParserError(
+						`Unexpected WHERE in operation. WHERE must come immediately after path, before operation.\n` +
+						`Use: FOR ${path} WHERE condition SET ...`,
+						this.current()
+					);
+				}
+
+				// Parse updates as array of {field, value} objects (same format as conditional SET)
+				const updates: Array<{ field: string; value: any }> = [];
+
+				while (true) {
+					const field = this.expectIdentifier('Expected field name');
+					const value = this.parseValue();
+					updates.push({ field, value });
+
+					// Check for WHERE after value (wrong position)
+					if (this.current().type === ActionTokenType.WHERE) {
+						throw new ActionParserError(
+							`WHERE must come before operation. Use: FOR ${path} WHERE status = "done" SET priority 10`,
+							this.current()
+						);
+					}
+
+					if (this.current().type === ActionTokenType.COMMA) {
+						this.advance();
+						continue;
+					} else if (this.current().type === ActionTokenType.EOF) {
+						break;
+					} else {
+						throw new ActionParserError('Expected comma or end after field update', this.current());
+					}
+				}
+
+				// Return standard action structure for direct element SET
+				return {
+					type: 'action',
+					target: {
+						type: 'path',
+						segments: this.pathToSegments(path)
+					},
+					operation: {
+						type: 'SET',
+						where: undefined,  // No WHERE clause for direct element access
+						updates
+					}
+				} as any;
 			}
 		}
 
@@ -1248,6 +1308,12 @@ class ActionParser {
 	 * "metadata.author" -> [{ type: 'property', key: 'metadata' }, { type: 'property', key: 'author' }]
 	 * "tasks[0]" -> [{ type: 'property', key: 'tasks' }, { type: 'index', index: 0 }]
 	 */
+	private pathHasArrayIndex(path: string): boolean {
+		// Check if any segment in the path ends with an array index like [0] or [-1]
+		// Examples: "tasks[0]" → true, "teams[-1].members[0]" → true, "tasks" → false
+		return /\[-?\d+\]/.test(path);
+	}
+
 	private pathToSegments(path: string): Array<{ type: string; key?: string; index?: number }> {
 		const segments: Array<{ type: string; key?: string; index?: number }> = [];
 
@@ -1255,10 +1321,10 @@ class ActionParser {
 		const parts = path.split(/\.(?![^\[]*\])/); // Split on dots not inside brackets
 
 		for (const part of parts) {
-			// Check if this part has an array index
-			const arrayMatch = part.match(/^([^\[]+)\[(\d+)\]$/);
+			// Check if this part has an array index (including negative indices)
+			const arrayMatch = part.match(/^([^\[]+)\[(-?\d+)\]$/);
 			if (arrayMatch) {
-				// Property with array index: "tasks[0]"
+				// Property with array index: "tasks[0]" or "tasks[-1]"
 				segments.push({ type: 'property', key: arrayMatch[1] });
 				segments.push({ type: 'index', index: parseInt(arrayMatch[2]) });
 			} else {

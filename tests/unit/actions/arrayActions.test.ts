@@ -74,10 +74,17 @@ describe('Array Actions', () => {
 		});
 
 		it('should handle negative index', () => {
-			const data = { tags: ['first', 'second', 'last'] };
-			const result = executeInsertAt(data, 'tags', 'before-last', -1);
-			expect(result.success).toBe(true);
-			expect(data.tags).toEqual(['first', 'second', 'before-last', 'last']);
+			// Test AT -1 (append to end - after the last element)
+			const data1 = { tags: ['first', 'second', 'last'] };
+			const result1 = executeInsertAt(data1, 'tags', 'appended', -1);
+			expect(result1.success).toBe(true);
+			expect(data1.tags).toEqual(['first', 'second', 'last', 'appended']);
+
+			// Test AT -2 (insert before last element)
+			const data2 = { tags: ['first', 'second', 'last'] };
+			const result2 = executeInsertAt(data2, 'tags', 'before-last', -2);
+			expect(result2.success).toBe(true);
+			expect(data2.tags).toEqual(['first', 'second', 'before-last', 'last']);
 		});
 
 		it('should append if index >= length', () => {

@@ -211,10 +211,10 @@ describe('Condition Lexer', () => {
 		});
 	});
 
-	describe('Special operators', () => {
-		it('should tokenize has operator', () => {
-			const tokens = tokenize('tags has "urgent"');
-			expect(tokens[1]).toMatchObject({ type: TokenType.HAS });
+describe('Special operators', () => {
+		it('should tokenize HAS operator', () => {
+			const tokens = tokenize('HAS tags');
+			expect(tokens[0]).toMatchObject({ type: TokenType.HAS });
 		});
 
 		it('should tokenize empty operator', () => {
@@ -228,15 +228,15 @@ describe('Condition Lexer', () => {
 		});
 	});
 
-	describe('Complex expressions', () => {
+describe('Complex expressions', () => {
 		it('should tokenize complex AND/OR expression', () => {
-			const tokens = tokenize('tags has "urgent" AND priority > 5 OR status = "critical"');
+			const tokens = tokenize('HAS tags AND priority > 5 OR status = "critical"');
 			expect(tokens.filter(t => t.type === TokenType.AND)).toHaveLength(1);
 			expect(tokens.filter(t => t.type === TokenType.OR)).toHaveLength(1);
 		});
 
 		it('should tokenize expression with parentheses', () => {
-			const tokens = tokenize('(tags has "urgent" OR priority > 5) AND status = "draft"');
+			const tokens = tokenize('(HAS tags OR priority > 5) AND status = "draft"');
 			expect(tokens.filter(t => t.type === TokenType.LPAREN)).toHaveLength(1);
 			expect(tokens.filter(t => t.type === TokenType.RPAREN)).toHaveLength(1);
 		});
@@ -286,11 +286,10 @@ describe('Condition Lexer', () => {
 			expect(tokens[2]).toMatchObject({ type: TokenType.NUMBER, value: 3 });
 		});
 
-		it('should tokenize: tags has "urgent"', () => {
-			const tokens = tokenize('tags has "urgent"');
-			expect(tokens[0].type).toBe(TokenType.IDENTIFIER);
-			expect(tokens[1].type).toBe(TokenType.HAS);
-			expect(tokens[2].type).toBe(TokenType.STRING);
+	it('should tokenize: HAS tags', () => {
+			const tokens = tokenize('HAS tags');
+			expect(tokens[0].type).toBe(TokenType.HAS);
+			expect(tokens[1].type).toBe(TokenType.IDENTIFIER);
 		});
 
 		it('should tokenize: metadata.author :string', () => {

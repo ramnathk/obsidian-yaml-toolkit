@@ -8,7 +8,7 @@
 import { App, TFile } from 'obsidian';
 import { FileResult, Rule } from '../types';
 import { executeRule } from './ruleEngine';
-import { writeFrontmatter } from '../yaml/yamlProcessor';
+import { readFrontmatter, writeFrontmatter } from '../yaml/yamlProcessor';
 import { LIMITS } from '../constants';
 
 export interface BatchResult {
@@ -75,6 +75,11 @@ export async function processBatch(
 			const result = await executeRule(app, rule, file);
 			results.push(result);
 
+			console.log('[BATCH_DEBUG] File:', file.path, 'Status:', result.status, 'Modified:', result.modified);
+			console.log('[BATCH_DEBUG] Original data:', result.originalData);
+			console.log('[BATCH_DEBUG] New data:', result.newData);
+			console.log('[BATCH_DEBUG] Changes:', result.changes);
+
 			// SAFETY: Skip writes during dry-run (preview mode)
 			if (!isDryRun) {
 				// Create backup if modified and backup enabled
@@ -89,11 +94,12 @@ export async function processBatch(
 
 				// Write changes if modified
 				if (result.modified && result.newData) {
-					const content = await app.vault.read(file);
-					const { content: bodyContent } = await import('../yaml/yamlProcessor').then(m =>
-						m.readFrontmatter(app, file)
-					);
+					console.log('[BATCH_DEBUG] *** WRITING CHANGES TO:', file.path);
+					console.log('[BATCH_DEBUG] *** New data to write:', result.newData);
+					const { content: bodyContent } = await readFrontmatter(app, file);
+					console.log('[BATCH_DEBUG] Body content length:', bodyContent.length);
 					await writeFrontmatter(app, file, result.newData, bodyContent);
+					console.log('[BATCH_DEBUG] Write complete for:', file.path);
 				}
 			}
 

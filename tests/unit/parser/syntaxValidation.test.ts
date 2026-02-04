@@ -386,8 +386,8 @@ describe('Documentation Examples - Corrected Syntax', () => {
 		expect(actAst1).not.toEqual(actAst2); // Different actions
 	});
 
-	it('should parse corrected "Archive Old Notes" example', () => {
-		const condition = 'created_date < "2024-01-01" AND NOT tags has "keep"';
+it('should parse corrected "Archive Old Notes" example', () => {
+		const condition = 'created_date < "2024-01-01" AND NOT HAS tags';
 		const action = 'FOR tags APPEND "archived"';
 
 		expect(() => parseCondition(condition)).not.toThrow();

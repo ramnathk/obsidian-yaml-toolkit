@@ -123,7 +123,11 @@ export function executeInsertAt(data: any, path: string, value: any, index: numb
 		}
 
 		// Handle negative indices
-		const actualIndex = index < 0 ? Math.max(0, array.length + index) : Math.min(index, array.length);
+		// For negative indices, add 1 to insert AFTER the referenced element
+		// AT -1 appends to end, AT -2 inserts before last, etc.
+		const actualIndex = index < 0
+			? Math.max(0, array.length + index + 1)
+			: Math.min(index, array.length);
 
 		array.splice(actualIndex, 0, value);
 
@@ -275,7 +279,9 @@ export function executeRemove(data: any, path: string, value: any): ActionResult
 }
 
 /**
- * REMOVE_ALL - Remove all occurrences of value
+ * REMOVE_ALL - Remove all occurrences of value(s)
+ * If value is an array, removes all items matching any value in that array
+ * If value is scalar, removes all items matching that value
  */
 export function executeRemoveAll(data: any, path: string, value: any): ActionResult {
 	try {
@@ -291,10 +297,13 @@ export function executeRemoveAll(data: any, path: string, value: any): ActionRes
 		}
 
 		const originalLength = array.length;
-		const valueStr = JSON.stringify(value);
+
+		// Build set of values to remove (handles both scalar and array inputs)
+		const valuesToRemove = Array.isArray(value) ? value : [value];
+		const valueStrs = valuesToRemove.map(v => JSON.stringify(v));
 
 		// Filter out all matching values
-		const filtered = array.filter(item => JSON.stringify(item) !== valueStr);
+		const filtered = array.filter(item => !valueStrs.includes(JSON.stringify(item)));
 
 		if (filtered.length === originalLength) {
 			// Silent success when value not found
@@ -682,7 +691,15 @@ export function executeMoveWhere(
 	target: number | 'START' | 'END' | MoveRelativeTarget
 ): ActionResult {
 	try {
+		// DEBUG: Log entry
+		console.log('[MOVE_WHERE_DEBUG] Entry:', { path, target, conditionType: condition?.type });
+		
 		const array = resolvePath(data, path);
+		console.log('[MOVE_WHERE_DEBUG] Resolved array:', { 
+			isArray: Array.isArray(array), 
+			length: Array.isArray(array) ? array.length : 'N/A',
+			arrayItems: Array.isArray(array) ? array.map((item: any) => item.title || item) : 'N/A'
+		});
 
 		if (!Array.isArray(array)) {
 			return {
@@ -713,10 +730,19 @@ export function executeMoveWhere(
 			// Skip the reference item itself
 			if (i === refIndex) continue;
 
-			if (evaluateCondition(condition, array[i])) {
+			const item = array[i];
+			const matches = evaluateCondition(condition, item);
+			console.log('[MOVE_WHERE_DEBUG] Item', i, ':', item, '-> matches:', matches);
+			if (matches) {
 				matchingIndices.push(i);
 			}
 		}
+
+		console.log('[MOVE_WHERE_DEBUG] Matching items found:', { 
+			count: matchingIndices.length, 
+			indices: matchingIndices,
+			items: matchingIndices.map(i => array[i].title || array[i])
+		});
 
 		if (matchingIndices.length === 0) {
 			return {
@@ -729,6 +755,11 @@ export function executeMoveWhere(
 
 		// Extract matching items (in reverse order to preserve indices)
 		const matchingItems = matchingIndices.reverse().map(i => array.splice(i, 1)[0]).reverse();
+
+		console.log('[MOVE_WHERE_DEBUG] After removal:', { 
+			arrayItems: array.map((item: any) => item.title || item),
+			matchingItems: matchingItems.map((item: any) => item.title || item)
+		});
 
 		// Adjust refIndex after removals (items before it were removed)
 		if (refIndex !== -1) {
@@ -750,12 +781,17 @@ export function executeMoveWhere(
 			array.splice(insertIndex, 0, ...matchingItems);
 		}
 
+		console.log('[MOVE_WHERE_DEBUG] Final array:', { 
+			arrayItems: array.map((item: any) => item.title || item)
+		});
+
 		return {
 			success: true,
 			modified: true,
 			changes: [`MOVE_WHERE ${path}: moved ${matchingItems.length} item(s)`],
 		};
 	} catch (error) {
+		console.log('[MOVE_WHERE_DEBUG] Error:', error);
 		return {
 			success: false,
 			modified: false,
@@ -821,4 +857,237 @@ export function executeUpdateWhere(
 			error: error instanceof Error ? error.message : 'Unknown error in UPDATE_WHERE',
 		};
 	}
+}
+
+
+/**
+ * DIRECT ELEMENT SET - Set fields on a specific array element by index
+ * For paths like: history[0] or teams[-1].members[0]
+ */
+export function executeDirectElementSet(
+	data: any,
+	path: string,
+	updates: Array<{ field: string; value: any }>
+): ActionResult {
+	try {
+		// Parse path segments to find array indices
+		const segments = parsePathSegmentsHelper(path);
+		
+		if (segments.length === 0) {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Invalid path: ${path}`,
+			};
+		}
+
+		// Check if the path contains at least one array index
+		const lastIndexSegment = findLastIndexSegment(segments);
+		if (lastIndexSegment === null) {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Path '${path}' does not contain array index. Direct element SET requires an index (e.g., array[0] or array[-1])`,
+			};
+		}
+
+		// Resolve to parent of the indexed element
+		let current = data;
+		
+		for (let i = 0; i < lastIndexSegment.segmentIndex; i++) {
+			const segment = segments[i];
+			
+			if (segment.type === 'property') {
+				if (!segment.key) {
+					return {
+						success: false,
+						modified: false,
+						changes: [],
+						error: `Invalid property in path`,
+					};
+				}
+				current = current[segment.key];
+			} else if (segment.type === 'index') {
+				if (!Array.isArray(current)) {
+					return {
+						success: false,
+						modified: false,
+						changes: [],
+						error: `Cannot index into non-array: ${path}`,
+					};
+				}
+				const idx = segment.index;
+				if (idx === undefined) {
+					return {
+						success: false,
+						modified: false,
+						changes: [],
+						error: `Invalid index in path: ${path}`,
+					};
+				}
+				const actualIndex = idx < 0 ? current.length + idx : idx;
+				if (actualIndex < 0 || actualIndex >= current.length) {
+					return {
+						success: false,
+						modified: false,
+						changes: [],
+						error: `Array index out of bounds in path '${path}'`,
+					};
+				}
+				current = current[actualIndex];
+			}
+
+			if (current === undefined || current === null) {
+				return {
+					success: false,
+					modified: false,
+					changes: [],
+					error: `Path does not exist: ${path}`,
+				};
+			}
+		}
+
+		// Now process the final index segment
+		const finalIndexSegment = segments[lastIndexSegment.segmentIndex];
+		if (finalIndexSegment.type !== 'index') {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Internal error: expected index segment`,
+			};
+		}
+
+		// Validate current is an array
+		if (!Array.isArray(current)) {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Field '${path}' is not an array`,
+			};
+		}
+
+		// Get the actual index
+		const finalIdx = finalIndexSegment.index;
+		if (finalIdx === undefined) {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Invalid index in path: ${path}`,
+			};
+		}
+		const actualIndex = finalIdx < 0
+			? current.length + finalIdx
+			: finalIdx;
+
+		// Validate index is in bounds
+		if (actualIndex < 0 || actualIndex >= current.length) {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Array index out of bounds: [${finalIdx}] (array length: ${current.length})`,
+			};
+		}
+
+		// Get the element
+		const element = current[actualIndex];
+
+		// Validate element is an object
+		if (typeof element !== 'object' || element === null || Array.isArray(element)) {
+			return {
+				success: false,
+				modified: false,
+				changes: [],
+				error: `Element at '${path}' is not an object`,
+			};
+		}
+
+		// Apply updates
+		for (const update of updates) {
+			element[update.field] = update.value;
+		}
+
+		const fieldNames = updates.map(u => u.field).join(', ');
+
+		return {
+			success: true,
+			modified: true,
+			changes: [`SET ${path}[${finalIdx}]: updated (${fieldNames})`],
+		};
+	} catch (error) {
+		return {
+			success: false,
+			modified: false,
+			changes: [],
+			error: error instanceof Error ? error.message : 'Unknown error in direct element SET',
+		};
+	}
+}
+
+// Helper function to parse path segments (similar to parsePathSegments but returns more info)
+function parsePathSegmentsHelper(path: string): Array<{ type: string; key?: string; index?: number }> {
+	const segments: Array<{ type: string; key?: string; index?: number }> = [];
+	let current = '';
+	let i = 0;
+
+	while (i < path.length) {
+		const char = path[i];
+
+		if (char === '.') {
+			// End of property segment
+			if (current.length > 0) {
+				segments.push({ type: 'property', key: current });
+				current = '';
+			}
+			i++;
+		} else if (char === '[') {
+			// Start of index segment
+			if (current.length > 0) {
+				segments.push({ type: 'property', key: current });
+				current = '';
+			}
+
+			// Find closing ]
+			const closeIndex = path.indexOf(']', i);
+			if (closeIndex === -1) {
+				throw new Error(`Unclosed bracket in path: ${path}`);
+			}
+
+			const indexStr = path.substring(i + 1, closeIndex);
+			const index = parseInt(indexStr, 10);
+
+			if (isNaN(index)) {
+				throw new Error(`Invalid array index: ${indexStr}`);
+			}
+
+			segments.push({ type: 'index', index });
+			i = closeIndex + 1;
+		} else {
+			// Regular character
+			current += char;
+			i++;
+		}
+	}
+
+	// Add final segment
+	if (current.length > 0) {
+		segments.push({ type: 'property', key: current });
+	}
+
+	return segments;
+}
+
+// Helper to find the last index segment
+function findLastIndexSegment(segments: Array<{ type: string; key?: string; index?: number }>): { segmentIndex: number } | null {
+	for (let i = segments.length - 1; i >= 0; i--) {
+		if (segments[i].type === 'index') {
+			return { segmentIndex: i };
+		}
+	}
+	return null;
 }
